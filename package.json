@@ -1,0 +1,17 @@
+{
+  "name": "content-manager",
+  "version": "1.0.0",
+  "description": "Populate content data from client sites",
+  "main": "url-parser.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "author": "Erik Dietrich",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "dependencies": {
+    "sitemapper": "^3.2.6"
+  }
+}
