@@ -5,3 +5,7 @@ npm-debug.log
 .env
 .DS_Store
 *.csv
+*.crd
+*.out
+results.txt
+newurls.txt

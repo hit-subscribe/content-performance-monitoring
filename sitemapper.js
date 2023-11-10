@@ -26,8 +26,10 @@ class Page {
 
 (async () => {
 
+	var sitemap = process.argv[2];
+
 	const sitemapper = new Sitemapper();
-	var result = await sitemapper.fetch('https://www.relyance.ai/sitemap.xml'); 
+	var result = await sitemapper.fetch(sitemap); 
 	var pages = result.sites.map(site => { return new Page(site)});
 	for(const page of pages) {
 		await page.sendGetRequest();
