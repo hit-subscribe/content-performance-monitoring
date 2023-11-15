@@ -2,7 +2,7 @@ const fs = require('fs');
 var Client = require('node-rest-client').Client;
 var SearchResult = require('./search-result');
 
-const CustomSearchCredentials = require('./custom-search-credentials');
+const CredentialsStore = require('./custom-search-credentials');
 
 
 function logForDebugging(data, response) {
@@ -13,9 +13,9 @@ function logForDebugging(data, response) {
 }
 
 var keyFileContents = fs.readFileSync('./keys.crd','utf8');
-var client = new CustomSearchCredentials(keyFileContents);
-var cx = client.getCx();
-var key = client.getApiKey();
+var credentialStore = new CredentialsStore(keyFileContents);
+var cx = credentialStore.getCredential('customSearchCx');
+var key = credentialStore.getCredential('customSearchKey');
 
 var urlFileContents = fs.readFileSync('./newurls.txt','utf8');
 var urls = urlFileContents.split("\r\n");

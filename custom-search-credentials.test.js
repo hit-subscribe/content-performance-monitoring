@@ -1,17 +1,17 @@
-const CustomSearchCredentials = require('./custom-search-credentials');
-var CustomSearchCredential = require('./custom-search-credentials');
+const CredentialsStore = require('./custom-search-credentials');
 
-const validCredFile = `cx:aCx
-key:aKey`;
+const validCredFile = `customSearchCx:aCx
+customSearchKey:aKey`;
 
 test('Returns cx for a validCredFile', () => {
-    expect(new CustomSearchCredentials(validCredFile).getCx()).toEqual('aCx');
+    expect(new CredentialsStore(validCredFile).getCredential('customSearchCx')).toEqual('aCx');
 })
 
 test('Returns key for a validCredFile', () => {
-    expect(new CustomSearchCredentials(validCredFile).getApiKey()).toEqual('aKey');
+    expect(new CredentialsStore(validCredFile).getCredential('customSearchKey')).toEqual('aKey');
 })
 
 test('Throws an exception when fileContents is empty', () => {
-    expect(() => {new CustomSearchCredentials('');}).toThrow('Invalid credentials file.');
-  })
+    expect(() => {new CredentialsStore('');}).toThrow('Invalid credentials file.');
+})
+

@@ -1,19 +1,26 @@
-module.exports = class CustomSearchCredentials {
+module.exports = class CredentialsStore {
 
 	constructor(fileContentsAsString) {
 
 		if(!fileContentsAsString) {
 			throw new Error('Invalid credentials file.');
 		}
-		this.fileContents = fileContentsAsString;
+		this.dictionary = this.getDictionary(fileContentsAsString.split('\n'));
 	}
 
-	getApiKey() {
-		return this.fileContents.split("\n")[1].split(":")[1].replace(/(\r\n|\n|\r)/gm, "");;
+	getCredential(key) {		
+		return this.dictionary[key];
 	}
 
-	getCx() {
-		return this.fileContents.split("\n")[0].split(":")[1].replace(/(\r\n|\n|\r)/gm, "");;
-	}
+	getDictionary(array) {
+		const dictionary = {};
+	  
+		array.forEach(item => {
+		  const [key, value] = item.split(':').map(part => part.trim());
+		  dictionary[key] = value;
+		});
+	  
+		return dictionary;
+	  }
 
 }
