@@ -1,4 +1,4 @@
-const CredentialsStore = require('./custom-search-credentials');
+const CredentialsStore = require('./credential-store');
 
 const validCredFile = `customSearchCx:aCx
 customSearchKey:aKey`;

@@ -2,7 +2,7 @@ const fs = require('fs');
 var Client = require('node-rest-client').Client;
 var SearchResult = require('./search-result');
 
-const CredentialsStore = require('./custom-search-credentials');
+const CredentialsStore = require('./credential-store');
 
 
 function logForDebugging(data, response) {
