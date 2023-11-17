@@ -1,7 +1,6 @@
 const fs = require('fs');
 var Client = require('node-rest-client').Client;
 var SearchResult = require('./search-result');
-
 const CredentialsStore = require('./credential-store');
 
 
@@ -39,10 +38,10 @@ urls.forEach(function(url){
 		console.log(result);
 
 		fs.writeFile('./results.txt', result,  {'flag':'a'},  function(err) {
-    	if (err) {
-        	return console.error(err);
-    	}
-});
+			if (err) {
+				return console.error(err);
+			}
+		});
 	});
 })
 
