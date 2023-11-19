@@ -1,42 +1,47 @@
 const fs = require('fs');
-const Client = require('node-rest-client').Client;
-const SearchResult = require('./search-result');
+const axios = require('axios');
 const CredentialsStore = require('./credential-store');
-const { get } = require('http');
-
-function logForDebugging(data, response) {
-	// parsed response body as js object
-	console.log(data);	
-	// raw response
-	//console.log(response);
-}
 
 var keyFileContents = fs.readFileSync('./keys.crd','utf8');
 var credentialStore = new CredentialsStore(keyFileContents);
-var cx = credentialStore.getCredential('customSearchCx');
-var key = credentialStore.getCredential('customSearchKey');
 
- 
+var dataForSeoUsername = credentialStore.getCredential('dataForSeoUsername');
+var dataforSeoPassword = credentialStore.getCredential('dataForSeoPassword');
+
 var rankFileContents = fs.readFileSync('./rankfile.txt','utf8').split(',');
 var keyword = encodeURIComponent(rankFileContents[0]);
 var url = rankFileContents[1];
 
-var siteSearch = rankFileContents[2] == 0 ? '' : `&siteSearch=${encodeURIComponent(rankFileContents[3])}`;
+getDataForSeoResults();
 
-var client = new Client();
-var getUrl = `https://customsearch.googleapis.com/customsearch/v1?cx=${cx}&q=${keyword}${siteSearch}&key=${key}`;
+function getDataForSeoResults() {
 
-console.log(getUrl);
+    const postRequest = {
+        method: 'post',
+        url: 'https://api.dataforseo.com/v3/serp/google/organic/live/regular',
+        auth: {
+            username: dataForSeoUsername,
+            password: dataforSeoPassword
+        },
+        data: [{
+            "keyword": keyword,
+            "language_code": "en",
+            "location_code": 2840
+        }],
+        headers: {
+            'content-type': 'application/json'
+        }
+    };
 
-getResults();
+    axios(postRequest).then(function (response) {
+        
+        var result = response['data']['tasks'];
+        var serpResults = result[0].result[0].items;
 
-function getResults() {
+        var rank = serpResults.find(entry  => entry.url === url).rank_absolute;
+        console.log(rank);
 
-    client.get(getUrl, function (data, response) {
-            
-        logForDebugging(data, response);
-        var searchResult = new SearchResult(data);
-
-        console.log('Rank is ' + searchResult.getFirstResultFor(url));
+    }).catch(function (error) {
+        console.log(error);
     });
 }
