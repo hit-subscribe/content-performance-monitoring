@@ -1,6 +1,7 @@
 const fs = require('fs');
 const axios = require('axios');
 const CredentialsStore = require('./credential-store');
+const Serp = require('./serp');
 
 var keyFileContents = fs.readFileSync('./keys.crd','utf8');
 var credentialStore = new CredentialsStore(keyFileContents);
@@ -36,9 +37,8 @@ function getDataForSeoResults() {
     axios(postRequest).then(function (response) {
         
         var result = response['data']['tasks'];
-        var serpResults = result[0].result[0].items;
-
-        var rank = serpResults.find(entry  => entry.url === url).rank_absolute;
+        var serp = new Serp(result);
+        var rank = serp.getRankOfUrl(url);
         console.log(rank);
 
     }).catch(function (error) {
