@@ -1,6 +1,5 @@
 const fs = require('fs');
 const axios = require('axios');
-const Rankfile = require('./rankfile');
 const CredentialsStore = require('./credential-store');
 const Serp = require('./serp');
 
@@ -12,8 +11,6 @@ var dataforSeoPassword = credentialStore.getCredential('dataForSeoPassword');
 
 var clientSite = process.argv[2];
 var keyword = process.argv.slice(3).join(' ');
-
-//console.log(keyword);
 
 checkForCannibalizing();
 
