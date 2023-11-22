@@ -17,8 +17,8 @@ getDataForSeoResults();
 
 function getDataForSeoResults() {
 
-    rankfile.rankings.forEach((ranking) => {
-        ranking.keywords.forEach((keyword) => {
+    rankfile.entryToCheck.forEach((entry) => {
+        entry.keywords.forEach((keyword) => {
 
             const postRequest = {
                 method: 'post',
@@ -41,9 +41,9 @@ function getDataForSeoResults() {
                 
                 var result = response['data']['tasks'];
                 var serp = new Serp(result);
-                var rank = serp.getRankOfUrl(ranking.url);
+                var rank = serp.getRankOfUrl(entry.url);
                 
-                console.log(`Rank for ${ranking.url}, ${keyword} is ${rank}`);
+                console.log(`Rank for ${entry.url}, ${keyword} is ${rank}`);
 
             }).catch(function (error) {
                 console.log(error);

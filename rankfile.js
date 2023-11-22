@@ -1,4 +1,4 @@
-class Ranking {
+class Entry {
 
     constructor(line) {
         var tokens = line.split(',');
@@ -11,15 +11,15 @@ class Ranking {
 module.exports = class Rankfile {
     
     constructor(rankfileContents) {
-        this.rankings = rankfileContents.split('\n').map(line => new Ranking(line));
+        this.entryToCheck = rankfileContents.split('\n').map(line => new Entry(line));
     }
 
     getUrl(index) {
-        return this.rankings[index].url;
+        return this.entryToCheck[index].url;
     }
 
     getKeyword(uIndex, kIndex) {
-        return this.rankings[uIndex].keywords[kIndex];
+        return this.entryToCheck[uIndex].keywords[kIndex];
     }
 
 }
