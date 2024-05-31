@@ -30,7 +30,6 @@ function getRankSafely(serp, url) {
     }
 }
 
-
 let results = [];
 
 getDataForSeoResults();
