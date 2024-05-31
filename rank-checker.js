@@ -22,6 +22,15 @@ const csvWriter = createCsvWriter({
     ]
 });
 
+function getRankSafely(serp, url) {
+    try {
+        return serp.getRankOfUrl(url);
+    } catch (error) {
+        return 100; // Set rank to 100 if an exception is thrown
+    }
+}
+
+
 let results = [];
 
 getDataForSeoResults();
@@ -29,8 +38,8 @@ getDataForSeoResults();
 function getDataForSeoResults() {
     let requests = [];
 
-    rankfile.entryToCheck.forEach((entry) => {
-        entry.keywords.forEach((keyword) => {
+    rankfile.entryToCheck.forEach((entry, entryIndex) => {
+        entry.keywords.forEach((keyword, keywordIndex) => {
 
             const postRequest = {
                 method: 'post',
@@ -53,9 +62,9 @@ function getDataForSeoResults() {
                 
                 var result = response['data']['tasks'];
                 var serp = new Serp(result);
-                var rank = serp.getRankOfUrl(entry.url);
+                var rank = getRankSafely(serp,entry.url);
                 
-                results.push({url: entry.url, keyword: keyword, rank: rank});
+                results.push({url: entry.url, keyword: keyword, rank: rank, entryIndex, keywordIndex});
                 //console.log(`Rank for ${entry.url}, ${keyword} is ${rank}`);
 
             }).catch(function (error) {
@@ -67,7 +76,12 @@ function getDataForSeoResults() {
     })
 
     Promise.all(requests).then(() => {
-        csvWriter.writeRecords(results)
+
+        results.sort((a, b) => a.entryIndex === b.entryIndex ? a.keywordIndex - b.keywordIndex : a.entryIndex - b.entryIndex);
+        // Remove index fields before writing to CSV
+        const csvResults = results.map(({ entryIndex, keywordIndex, ...rest }) => rest);
+
+        csvWriter.writeRecords(csvResults)
             .then(() => {
                 console.log('CSV file was written successfully');
             })
