@@ -1,7 +1,7 @@
 class Entry {
 
     constructor(line) {
-        var tokens = line.split(',');
+        var tokens = line.split(',').map(token => token.trim());
         this.url = tokens[0];
         this.keywords = tokens.slice(1);
     }
