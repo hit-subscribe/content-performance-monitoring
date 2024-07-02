@@ -37,3 +37,7 @@ test('getFirstOccurrenceOfSite returns rank of matching result', () => {
 test('getEntryNumber returns entry for that number', () => {
   expect(new Serp(serpJson).getEntryNumber(Rank).domain).toEqual(SiteUrl);
 })
+
+test('getEntries returns an array with first entry as matching url', () => {
+  expect(new Serp(serpJson).getUrls()[0]).toEqual(MatchingUrl);
+})

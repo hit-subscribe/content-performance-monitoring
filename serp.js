@@ -16,4 +16,8 @@ module.exports = class Serp {
         return this.serpResults.find(entry => entry.rank_absolute == rank);
     }
 
+    getUrls() {
+        return this.serpResults.map(sr => sr.url);
+    }
+
 }
