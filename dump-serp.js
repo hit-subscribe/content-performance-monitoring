@@ -16,8 +16,12 @@ dumpSerp();
 function dumpSerp() {
     const serpRequest = constructSerpRequest(searchString);
     getEntries(serpRequest).then((urls) => {
-        urls.forEach(url => {console.log(url)});
-    });
+        //urls.forEach(url => {console.log(url)});
+        const csvString = urls.join('\n');
+        fs.writeFileSync('serp.csv', csvString, 'utf8');
+    }).catch((error) => {
+        console.error('Error fetching URLs:', error);
+    });;
 }
 
 function getEntries(postRequest) {
