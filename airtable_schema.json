@@ -1,27 +1,687 @@
 {
-   "tables": [
-      {
-        "description": "A to-do list of places to visit",
-        "fields": [
-          {
-            "description": "Name of the apartment",
-            "name": "Name",
-            "type": "singleLineText"
-          },
-          {
-            "name": "Address",
-            "type": "singleLineText"
-          },
-          {
-            "name": "Visited",
-            "options": {
-              "color": "greenBright",
-              "icon": "check"
-            },
-            "type": "checkbox"
-          }
-        ],
-        "name": "Apartments"
-      }
+    "tables": [
+        {
+            "id": "tbl1Vzi4yve9SSX2F",
+            "name": "URLs",
+            "primaryFieldId": "fld55EQfym5QHZF0d",
+            "fields": [
+                {
+                    "type": "singleLineText",
+                    "id": "fld55EQfym5QHZF0d",
+                    "name": "URLs"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "local",
+                            "format": "l"
+                        }
+                    },
+                    "id": "fldX5GBENdcd5Uefz",
+                    "name": "LastMod"
+                },
+                {
+                    "type": "multipleSelects",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selsYXZe7imKzIcQF",
+                                "name": "Landing Page",
+                                "color": "pinkLight2"
+                            },
+                            {
+                                "id": "sel0lFv8eDd1DXRDF",
+                                "name": "Blog",
+                                "color": "blueLight2"
+                            }                
+                        ]
+                    },
+                    "id": "fldygmAuG2ldcrJyF",
+                    "name": "Attributes"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblF658QcYNwkH2W5",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": true,
+                        "inverseLinkFieldId": "fldaQamrBWYQwlcsk"
+                    },
+                    "id": "fldb49ky4qB9fx4i3",
+                    "name": "Primary Keyword"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldb49ky4qB9fx4i3",
+                        "fieldIdInLinkedTable": "flduqLEs06lenn5zU",
+                        "result": {
+                            "type": "singleLineText"
+                        }
+                    },
+                    "id": "fldb5rP8U4YYNJwKX",
+                    "name": "Keyword Text"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldb49ky4qB9fx4i3",
+                        "fieldIdInLinkedTable": "fldH3KPTekhJJZvbn",
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fldMOvTKWmyuLKDoF",
+                    "name": "Search Volume"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldb49ky4qB9fx4i3",
+                        "fieldIdInLinkedTable": "fldx2h0n0Ar0LJdSW",
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fldx7IMatbrilyf6z",
+                    "name": "Difficulty"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldb49ky4qB9fx4i3",
+                        "fieldIdInLinkedTable": "fldIit76CzBE2i3Sj",
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fldNzq7xrQ8XKHeEf",
+                    "name": "Projected Rank"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldb49ky4qB9fx4i3",
+                        "fieldIdInLinkedTable": "fldqqrI3JI7Il5ONC",
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fld9XDwGOB7C9epxS",
+                    "name": "Projected Traffic"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbltc1ZWz4rO89vdR",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldmi94ppHsu1tNNp"
+                    },
+                    "id": "fldJ6vQwy0cSZNPiM",
+                    "name": "Ranking Results"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblvjWqG0bMRcaBeU",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fld48gPsFDkyvvjvC"
+                    },
+                    "id": "fldbBG4s1k6piwZtk",
+                    "name": "URL History"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwx6nvArGQ3iGLvE",
+                    "name": "Grid view",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tblF658QcYNwkH2W5",
+            "name": "Keywords",
+            "primaryFieldId": "flduqLEs06lenn5zU",
+            "fields": [
+                {
+                    "type": "singleLineText",
+                    "id": "flduqLEs06lenn5zU",
+                    "name": "Keyword"
+                },
+                {
+                    "type": "multipleSelects",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selvpZCQXxrpMWvoy",
+                                "name": "Research",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selQLd6Gt6PqUx71T",
+                                "name": "Commercial",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selRC0laiNfSjt7BQ",
+                                "name": "Transactional",
+                                "color": "tealLight2"
+                            },
+                            {
+                                "id": "selkEHlqQslNUWe2m",
+                                "name": "Navigational",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selail9sfLiq08Wau",
+                                "name": "Lookup",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "selI40wS4tVaCbcFM",
+                                "name": "Fragmented",
+                                "color": "orangeLight2"
+                            },
+                            {
+                                "id": "selEki7PvTmBjNMSm",
+                                "name": "Off-Topic",
+                                "color": "redLight2"
+                            },
+                            {
+                                "id": "selvSNsMbkvacFiRg",
+                                "name": "Response",
+                                "color": "pinkLight2"
+                            },
+                            {
+                                "id": "selGrCk5pvik7TTW3",
+                                "name": "Under-served",
+                                "color": "purpleLight2"
+                            },
+                            {
+                                "id": "selarfQiZfyADX1ew",
+                                "name": "Scholarly",
+                                "color": "grayLight2"
+                            },
+                            {
+                                "id": "selcpTeISKERVmYjL",
+                                "name": "Confused",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldoYFcomQ4hNaJJW",
+                    "name": "Search Intent"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldmoStBbgCDOd8GI",
+                    "name": "Full Searcher Question"
+                },
+                {
+                    "type": "multilineText",
+                    "id": "fldxRTbsPrSmwQpGR",
+                    "name": "Segmentation"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblF658QcYNwkH2W5",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": true
+                    },
+                    "id": "fldrpTwaKdBHne7jP",
+                    "name": "Parent Keyword"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblF658QcYNwkH2W5",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false
+                    },
+                    "id": "fldpH9xYdJAPj1j1w",
+                    "name": "Synonym Keyword"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldH3KPTekhJJZvbn",
+                    "name": "Volume"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldx2h0n0Ar0LJdSW",
+                    "name": "Difficulty"
+                },
+                {
+                    "type": "formula",
+                    "options": {
+                        "isValid": true,
+                        "formula": "21",
+                        "referencedFieldIds": [],
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fldjuOHCmgpSTitW8",
+                    "name": "Domain Authority"
+                },
+                {
+                    "type": "formula",
+                    "options": {
+                        "isValid": true,
+                        "formula": "ROUND(1 + 10 / (POWER(2,({fldjuOHCmgpSTitW8}/10)))* LOG(1+0.001*POWER(IF({fldx2h0n0Ar0LJdSW} = BLANK(), 0,{fldx2h0n0Ar0LJdSW}),4), 2.718281828459)*(IF({fldx2h0n0Ar0LJdSW} = BLANK(), 0,{fldx2h0n0Ar0LJdSW})/20))",
+                        "referencedFieldIds": [
+                            "fldjuOHCmgpSTitW8",
+                            "fldx2h0n0Ar0LJdSW"
+                        ],
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fldIit76CzBE2i3Sj",
+                    "name": "Projected Rank"
+                },
+                {
+                    "type": "formula",
+                    "options": {
+                        "isValid": true,
+                        "formula": "SWITCH({fldIit76CzBE2i3Sj}, 1, .43 * {fldH3KPTekhJJZvbn}, 2, .37 * {fldH3KPTekhJJZvbn}, 3, .29 * {fldH3KPTekhJJZvbn}, 4, .19 * {fldH3KPTekhJJZvbn}, 5, .1 * {fldH3KPTekhJJZvbn}, 6, .1 * {fldH3KPTekhJJZvbn}, 7, .05 * {fldH3KPTekhJJZvbn}, 8, .04 * {fldH3KPTekhJJZvbn}, 9, .04 * {fldH3KPTekhJJZvbn}, 10, .03 * {fldH3KPTekhJJZvbn}, 0) ",
+                        "referencedFieldIds": [
+                            "fldIit76CzBE2i3Sj",
+                            "fldH3KPTekhJJZvbn"
+                        ],
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fldqqrI3JI7Il5ONC",
+                    "name": "Projected Traffic"
+                },
+                {
+                    "type": "multipleSelects",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selNj9ADXXev90Uuo",
+                                "name": "Possible PPC",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "sellMd2X3gyfxr76q",
+                                "name": "data synthetics",
+                                "color": "redLight2"
+                            },
+                            {
+                                "id": "selB5ykrgxvwhWUdV",
+                                "name": "it resilience",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "selbbHDHEEjPBXWhl",
+                                "name": "database virtualization",
+                                "color": "orangeLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldLvHK6Rpjv6f9mi",
+                    "name": "Attributes"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldzTe3wrnjDpStBp",
+                    "name": "Current Ranking"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selg9vlVPQzZieFE5",
+                                "name": "Ready for Approval",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "sel5fFMWm30oojKES",
+                                "name": "Targeted",
+                                "color": "pinkLight2"
+                            },
+                            {
+                                "id": "selfUUuoDO9ZbrdVP",
+                                "name": "Targeted by Parent or Synonym",
+                                "color": "purpleLight2"
+                            },
+                            {
+                                "id": "sely3SVGHcZfZ7CUl",
+                                "name": "Rejected/Unsuitable",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selGvO87CW1C0fqX3",
+                                "name": "Target with Synonym",
+                                "color": "redLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldPLutzqMHj382JG",
+                    "name": "Status"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "sel9gPVRbFScnSL0s",
+                                "name": "Definition",
+                                "color": "redLight2"
+                            },
+                            {
+                                "id": "selitrjAOijC4ygGV",
+                                "name": "Landing Page",
+                                "color": "purpleLight2"
+                            },
+                            {
+                                "id": "sel5kmgqIQVxBdE5O",
+                                "name": "Commercial Round-Up",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selutBt7LuyEgIZKY",
+                                "name": "Informational List",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "seljbcdrD8oSyiU4o",
+                                "name": "Guide",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "sel6Sdr89eHHpM7LS",
+                                "name": "Comparison",
+                                "color": "yellowLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldmCPVHBTFZxBMqh",
+                    "name": "Type of Content to Rank"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl1Vzi4yve9SSX2F",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldb49ky4qB9fx4i3"
+                    },
+                    "id": "fldaQamrBWYQwlcsk",
+                    "name": "URLs"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbltc1ZWz4rO89vdR",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldvuwBmaaBTVLLyp"
+                    },
+                    "id": "fld9qKwmuqvLcuk6S",
+                    "name": "Ranking Results"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwYRM82dmtlQmqPk",
+                    "name": "Raw Data",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwK8TuGHVTbapudR",
+                    "name": "Data Entry",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwcqcYPyKTll8KuH",
+                    "name": "Dashboard Sync",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwxW9csWXbGwZBeM",
+                    "name": "Scratchpad",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tbltc1ZWz4rO89vdR",
+            "name": "Ranking Results",
+            "primaryFieldId": "fldSuvXJdMl8BAq0J",
+            "fields": [
+                {
+                    "type": "autoNumber",
+                    "id": "fldSuvXJdMl8BAq0J",
+                    "name": "ID"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl1Vzi4yve9SSX2F",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": true,
+                        "inverseLinkFieldId": "fldJ6vQwy0cSZNPiM"
+                    },
+                    "id": "fldmi94ppHsu1tNNp",
+                    "name": "URLs"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldmi94ppHsu1tNNp",
+                        "fieldIdInLinkedTable": "fld55EQfym5QHZF0d",
+                        "result": {
+                            "type": "singleLineText"
+                        }
+                    },
+                    "id": "fldISagqVLmExq6nS",
+                    "name": "URL"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblF658QcYNwkH2W5",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": true,
+                        "inverseLinkFieldId": "fld9qKwmuqvLcuk6S"
+                    },
+                    "id": "fldvuwBmaaBTVLLyp",
+                    "name": "Keywords"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldvuwBmaaBTVLLyp",
+                        "fieldIdInLinkedTable": "flduqLEs06lenn5zU",
+                        "result": {
+                            "type": "singleLineText"
+                        }
+                    },
+                    "id": "fldoYUapFVKjbND0I",
+                    "name": "Keyword"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "local",
+                            "format": "l"
+                        }
+                    },
+                    "id": "fldxSeAfErVBbwHgB",
+                    "name": "Measurement Date"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldzcy6yRsbzwWxLq",
+                    "name": "Number"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwb0kn4dVtDpXKIl",
+                    "name": "Grid view",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tblvjWqG0bMRcaBeU",
+            "name": "URL History",
+            "primaryFieldId": "fldKxpxGHlvh2quTj",
+            "fields": [
+                {
+                    "type": "autoNumber",
+                    "id": "fldKxpxGHlvh2quTj",
+                    "name": "ID"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl1Vzi4yve9SSX2F",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": true,
+                        "inverseLinkFieldId": "fldbBG4s1k6piwZtk"
+                    },
+                    "id": "fld48gPsFDkyvvjvC",
+                    "name": "URLs"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fld48gPsFDkyvvjvC",
+                        "fieldIdInLinkedTable": "fld55EQfym5QHZF0d",
+                        "result": {
+                            "type": "singleLineText"
+                        }
+                    },
+                    "id": "fldnVxs3DmrggOSZe",
+                    "name": "URL"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "local",
+                            "format": "l"
+                        }
+                    },
+                    "id": "fldvevD7ihaOJl4qJ",
+                    "name": "Date"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "sel5s4kp2d6yABnCJ",
+                                "name": "Standard Refresh",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selHWGsDp9wWH72aD",
+                                "name": "Comprehensive Refresh",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selchfMxN2BpatUN4",
+                                "name": "Re-Title",
+                                "color": "tealLight2"
+                            },
+                            {
+                                "id": "selHV2naL8RkfKSit",
+                                "name": "Implemented CTA",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "sel0Kq46HrFWVQl9K",
+                                "name": "Published",
+                                "color": "greenDark1"
+                            }
+                        ]
+                    },
+                    "id": "fldcZyhQmXbCcC1UT",
+                    "name": "Action"
+                },
+                {
+                    "type": "formula",
+                    "options": {
+                        "isValid": true,
+                        "formula": "{fldcZyhQmXbCcC1UT}",
+                        "referencedFieldIds": [
+                            "fldcZyhQmXbCcC1UT"
+                        ],
+                        "result": {
+                            "type": "singleLineText"
+                        }
+                    },
+                    "id": "fldObO0Cg0kf3zNB8",
+                    "name": "Action Text"
+                },
+                {
+                    "type": "multilineText",
+                    "id": "fldVth4XwuducIsZF",
+                    "name": "Notes"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwx0mY6IbuUEc9vs",
+                    "name": "Grid view",
+                    "type": "grid"
+                }
+            ]
+        }
     ]
 }

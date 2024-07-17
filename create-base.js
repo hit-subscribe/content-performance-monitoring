@@ -27,37 +27,6 @@ var data = {
     workspaceId: workspaceId
 };
 
-/*
-data = {
-    name: baseName,
-    tables: [
-        {
-            description: "A to-do list of places to visit",
-            fields: [
-                {
-                    description: "Name of the apartment",
-                    name: "Name",
-                    type: "singleLineText"
-                },
-                {
-                    name: "Address",
-                    type: "singleLineText"
-                },
-                {
-                    name: "Visited",
-                    options: {
-                        color: "greenBright",
-                        icon: "check"
-                    },
-                    type: "checkbox"
-                }
-            ],
-            name: "Apartments"
-        }
-    ],
-    workspaceId: workspaceId
-};*/
-
 console.log(data);
 
 axios.post(url, data, {
