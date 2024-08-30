@@ -1,0 +1,1 @@
+SELECT DISTINCT url FROM @client.airtable_url_inventory WHERE CONTAINS_SUBSTR(tags, @tag);

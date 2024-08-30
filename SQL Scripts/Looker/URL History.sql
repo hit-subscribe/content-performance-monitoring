@@ -1,0 +1,1 @@
+SELECT * FROM @client.url_history WHERE url = REGEXP_REPLACE(@url, '/$', '')
