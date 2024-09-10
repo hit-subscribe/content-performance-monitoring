@@ -11,3 +11,4 @@ results.txt
 newurls.txt
 rankfile.txt
 BigQuery.session.sql
+bq-account-key.json
