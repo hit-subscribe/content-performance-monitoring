@@ -12,11 +12,18 @@ const bigquery = new BigQuery({
 
 async function queryBigQuery() {
   const query = `
-    SELECT url, SUM(screenpageviews) as views
-    FROM mmap.ga4
-    WHERE CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
-    GROUP BY url
-    ORDER BY views DESC;
+    SELECT 
+    url,
+    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL (7*2) DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL (7+1) DAY) THEN screenpageviews ELSE 0 END) AS older,
+    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND CURRENT_DATE() THEN screenpageviews ELSE 0 END) AS most_recent,
+    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL (7*2) DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL (7+1) DAY) THEN screenpageviews ELSE 0 END) - 
+    	SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND CURRENT_DATE() THEN screenpageviews ELSE 0 END) AS loss
+FROM 
+    mmap.ga4
+  WHERE CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
+GROUP BY url
+HAVING older > 5 * most_recent AND older > 20
+ORDER BY loss DESC
   `;
 
   const options = {
