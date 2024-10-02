@@ -11,6 +11,8 @@ const bigquery = new BigQuery({
 });
 
 async function queryBigQuery() {
+  //This query shows every URL in MMAP's GA4 that had at least 5 times as much traffic in the week before last as it did the past week
+  // and that had at least 20 visitors 2 weeks ago.  This is an initial stab at "catstrophic traffic loss"
   const query = `
     SELECT 
     url,
