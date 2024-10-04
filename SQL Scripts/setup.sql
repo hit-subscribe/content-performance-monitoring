@@ -1,6 +1,3 @@
-CREATE VIEW @client.ga4 AS
-SELECT date, REGEXP_REPLACE(CONCAT('https://www.@client.com',landingpage), '/+$', '') as url, screenpageviews, sessionsourcemedium FROM @client.google_analytics;
-
 CREATE VIEW @client.traffic_loss_30 AS
 SELECT 
     url,
@@ -155,6 +152,7 @@ CREATE VIEW @client.url_recent_30 AS SELECT
 FROM 
   @client.ga4
 WHERE 
+  CONTAINS_SUBSTR(sessionsourcemedium, 'organic') AND
   date BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP()
 GROUP BY 
   url
@@ -178,4 +176,15 @@ FROM @client.url_traffic_by_calendar_month cm
   INNER JOIN @client.url_recent_30 r ON cm.url = r.url 
   INNER JOIN @client.url_performance up ON cm.url = up.url
 GROUP BY cm.url, r.total_views, up.projected_traffic, underperformance, up.lastmod, up.primary_keyword, up.rank
-ORDER BY potential DESC
+HAVING  GREATEST(MAX(cm.total_views) - r.total_views, up.projected_traffic - r.total_views) > 0
+ORDER BY potential DESC;
+
+CREATE VIEW @client.tags AS
+SELECT DISTINCT tag
+FROM (
+  SELECT TRIM(tag) AS tag
+  FROM @client.airtable_url_inventory, 
+  UNNEST(SPLIT(tags, ',')) AS tag
+)
+WHERE tag IS NOT NULL
+ORDER BY tag;
