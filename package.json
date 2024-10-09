@@ -13,8 +13,10 @@
   },
   "dependencies": {
     "@google-cloud/bigquery": "^7.9.0",
+    "airtable": "^0.12.2",
     "axios": "^1.6.2",
     "csv-writer": "^1.6.0",
+    "dotenv": "^16.4.5",
     "node-rest-client": "^3.1.1",
     "sitemapper": "^3.2.6"
   }
