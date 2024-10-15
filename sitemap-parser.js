@@ -40,18 +40,25 @@ async function getSitemapUrls(sitemapUrl) {
 
 const getExistingUrls = async () => {
   const records = [];
-  await base(URLtableName).select({
-    fields: [URLfieldName], // Assuming your Airtable has a 'URL' field
-    pageSize: 100
-  }).eachPage((pageRecords, fetchNextPage) => {
-    pageRecords.forEach((record) => {
-      console.log(record.get('URL'));
-      records.push(record.get('URL'));
-    });
-    fetchNextPage();
-  });
 
-  return records;
+  return new Promise((resolve, reject) => {
+    base(URLtableName).select({
+      fields: [URLfieldName], // Assuming your Airtable has a 'URL' field
+      pageSize: 100
+    }).eachPage((pageRecords, fetchNextPage) => {
+      pageRecords.forEach((record) => {
+        console.log(record.get('URL'));
+        records.push(record.get('URL'));
+      });
+      fetchNextPage();
+    }, (err) => {
+      if (err) {
+        reject(err);  // Reject promise on error
+      } else {
+        resolve(records);  // Resolve promise on success
+      }
+    });
+  });
 };
 
 const addNewRecords = async (newUrls) => {
