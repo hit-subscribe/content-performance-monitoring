@@ -16,7 +16,7 @@ get this from https://airtable.com/developers/web/api/introduction
 const Sitemapper = require('sitemapper');
 const Airtable = require('airtable');
 require('dotenv').config();
-const URLfieldName = 'URL';
+const URLfieldName = 'URLs';
 const URLtableName = 'URLs';
 const baseID = process.env.AIRTABLE_CURRENT_BASE;
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(baseID);
@@ -47,8 +47,8 @@ const getExistingUrls = async () => {
       pageSize: 100
     }).eachPage((pageRecords, fetchNextPage) => {
       pageRecords.forEach((record) => {
-        console.log(record.get('URL'));
-        records.push(record.get('URL'));
+        console.log(record.get(URLfieldName));
+        records.push(record.get(URLfieldName));
       });
       fetchNextPage();
     }, (err) => {
