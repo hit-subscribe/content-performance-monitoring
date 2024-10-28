@@ -10,7 +10,7 @@ WITH date_ranges AS (
     position,
     impressions,
     clicks
-  FROM `${client_id}.gsc`
+  FROM `mmap.gsc`
   WHERE DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
     AND CURRENT_DATE()
     AND position IS NOT NULL -- Exclude rows where position is NULL

@@ -1,3 +1,9 @@
+
+/// EDIT THESE
+
+const clientName = 'vector'
+const sqlFile = 'traffic_decrease.sql'
+
 const fs = require('fs');
 const CredentialsStore = require('./credential-store');
 const { BigQuery } = require('@google-cloud/bigquery');
@@ -8,12 +14,15 @@ var credentialStore = new CredentialsStore(keyFileContents);
 
 
 async function queryUrlsWithPercentageDecrease(client, percentageDecrease, days) {
-  const sqlFilePath = path.join(__dirname, 'SQL Scripts', 'queries', 'scratch.sql');
+  const sqlFilePath = path.join(__dirname, 'SQL Scripts', 'queries', sqlFile);
   const query = fs.readFileSync(sqlFilePath, 'utf8');
 
   console.log(sqlFilePath)
   const options = {
     query: query,
+    params: {
+      'client_name': clientName
+    },
   };
 
   console.log(options)
@@ -30,8 +39,7 @@ const bigquery = new BigQuery({
   projectId: credentialStore.getCredential('bigQueryProjectId'),
 });
 
-const minZeroDays = 1;
-const daysWithTraffic = 1;
+
 queryUrlsWithPercentageDecrease(bigquery)
   .then(results => {
     console.log(results);

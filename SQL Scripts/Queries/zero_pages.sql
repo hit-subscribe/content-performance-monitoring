@@ -6,7 +6,7 @@ WITH ZeroTraffic AS (
     LAG(screenpageviews, 1) OVER (PARTITION BY landingpage ORDER BY CAST(date AS DATE)) AS prev_day_views,
     LAG(screenpageviews, 2) OVER (PARTITION BY landingpage ORDER BY CAST(date AS DATE)) AS prev_two_day_views
   FROM
-    `${client_id}.google_analytics`
+    `mmap.google_analytics`
   WHERE
     CAST(date AS DATE) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 2 DAY)
 

@@ -3,7 +3,7 @@ WITH six_months_data AS (
     page,
     AVG(ctr) * 100 AS avg_ctr_six_months
   FROM
-    `${client_id}.gsc`  -- Your table reference here
+    `mmap.gsc`  -- Your table reference here
   WHERE
     CAST(date AS DATE) >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
     AND CAST(date AS DATE) < DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)  -- Exclude the last 30 days
@@ -16,7 +16,7 @@ last_30_days_data AS (
     page,
     AVG(ctr) * 100 AS avg_ctr_last_30_days
   FROM
-    `${client_id}.gsc`  -- Your table reference here
+    `mmap.gsc`  -- Your table reference here
   WHERE
     CAST(date AS DATE) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
   GROUP BY

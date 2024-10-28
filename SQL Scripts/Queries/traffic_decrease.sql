@@ -23,7 +23,7 @@ WITH Data AS (
         ELSE 0
       END
     ) AS most_recent
-  FROM `${client_id}.ga4`
+  FROM mmap.ga4
   WHERE CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
   GROUP BY url
 )

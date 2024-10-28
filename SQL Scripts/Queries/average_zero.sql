@@ -11,7 +11,7 @@ WITH past_six_months AS (
       MONTH
       FROM DATE(date)
     ) AS month -- Convert TIMESTAMP to DATE
-  FROM `${client_id}.ga4`
+  FROM `mmap.ga4`
   WHERE DATE(date) >= DATE_TRUNC(
       DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH),
       MONTH
@@ -29,7 +29,7 @@ current_zero_views AS (
   -- Step 3: Find URLs with 0 screenpageviews in the most recent month
   SELECT url,
     MIN(DATE(date)) AS zero_traffic_date -- Get the earliest date of zero traffic in the current month
-  FROM `${client_id}.ga4`
+  FROM `mmap.ga4`
   WHERE DATE(date) >= DATE_TRUNC(CURRENT_DATE(), MONTH) -- Data from the current month
     AND screenpageviews = 0
   GROUP BY url
