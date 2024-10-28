@@ -8,17 +8,12 @@ var credentialStore = new CredentialsStore(keyFileContents);
 
 
 async function queryUrlsWithPercentageDecrease(client, percentageDecrease, days) {
-  const sqlFilePath = path.join(__dirname, 'SQL Scripts', 'queries','traffic-decrease.sql');
+  const sqlFilePath = path.join(__dirname, 'SQL Scripts', 'queries', 'scratch.sql');
   const query = fs.readFileSync(sqlFilePath, 'utf8');
 
   console.log(sqlFilePath)
   const options = {
     query: query,
-    params: {
-      'percentage_decrease': percentageDecrease,
-      'days': days,
-      'floor': floor
-    },
   };
 
   console.log(options)
@@ -34,11 +29,10 @@ const bigquery = new BigQuery({
   keyFilename: './bq-account-key.json',
   projectId: credentialStore.getCredential('bigQueryProjectId'),
 });
-const percentageDecrease = 80; // Adjust the percentage decrease as needed
-const days = 14; // Adjust the number of days as needed
-const floor = 100; //the minimum "old" traffic, must be above 0
 
-queryUrlsWithPercentageDecrease(bigquery, percentageDecrease, days)
+const minZeroDays = 1;
+const daysWithTraffic = 1;
+queryUrlsWithPercentageDecrease(bigquery)
   .then(results => {
     console.log(results);
   })
