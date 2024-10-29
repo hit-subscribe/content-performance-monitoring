@@ -21,7 +21,8 @@ averages AS (
     period,
     AVG(position) AS avg_position,
     AVG(impressions) AS avg_impressions,
-    AVG(clicks) AS avg_clicks
+    AVG(clicks) AS avg_clicks,
+    SUM(impressions) AS total_impressions
   FROM date_ranges
   WHERE period IS NOT NULL
   GROUP BY query,
@@ -36,7 +37,10 @@ SELECT a.query,
   SAFE_DIVIDE(
     COALESCE(b.avg_position, 100) - a.avg_position,
     a.avg_position
-  ) * -100 AS position_percentage_change
+  ) * -100 AS position_percentage_change,
+  a.total_impressions AS total_impressions_past_six_months,
+  COALESCE(b.total_impressions, 0) AS total_impressions_last_30_days,
+  a.total_impressions - COALESCE(b.total_impressions, 0) AS impressions_lost
 FROM (
     SELECT *
     FROM averages
@@ -48,4 +52,4 @@ FROM (
     WHERE period = 'last_30_days'
   ) b ON a.query = b.query
   AND a.page = b.page
-ORDER BY position_percentage_change ASC
+ORDER BY a.total_impressions DESC
