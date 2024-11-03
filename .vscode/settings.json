@@ -2,12 +2,20 @@
     "sqltools.useNodeRuntime": true,
     "sqltools.connections": [
         {
-            "name": "BigQuery",
+            "name": "Panoply",
             "authenticator": "SERVICE_ACCOUNT",
             "location": "us",
             "previewLimit": 50,
             "driver": "BigQuery",
             "keyfile": "D:\\erik\\Downloads\\service-account-key.json"
+        },
+        {
+            "name": "BigQuery",
+            "authenticator": "SERVICE_ACCOUNT",
+            "location": "us",
+            "previewLimit": 50,
+            "driver": "BigQuery",
+            "keyfile": "D:\\erik\\Desktop\\Javascript Playpen\\BigQuery Connections\\radiant-gateway-440402-g7-57cad3868c18.json"
         }
     ]
 }

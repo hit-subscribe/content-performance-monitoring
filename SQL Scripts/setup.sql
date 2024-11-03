@@ -188,3 +188,34 @@ FROM (
 )
 WHERE tag IS NOT NULL
 ORDER BY tag;
+
+CREATE VIEW @client.seo_issues AS
+SELECT  
+    asi.fields_issue as issue,
+    asi.fields_issue_description as issue_description,
+    asi.fields_priority as priority,
+    asi.fields_qualified_to_fix as qualified_to_fix,
+    asi.fields_fixed as fixed,
+    asi.fields_link_to_more_info as link_to_more_info,
+    ARRAY_TO_STRING(ARRAY_AGG(asiau.value), ', ') as affected_urls
+FROM @client.airtable_seo_issues asi 
+LEFT JOIN @client.airtable_seo_issues_fields_affected_urls asiau 
+    ON asi.__panoply_id = asiau.__airtable_seo_issues_panoply_id
+GROUP BY 
+    asi.fields_issue, 
+    asi.fields_issue_description, 
+    asi.fields_priority, 
+    asi.fields_qualified_to_fix, 
+    asi.fields_fixed, 
+    asi.fields_link_to_more_info;
+
+CREATE VIEW @client.seo_issues_by_url AS
+SELECT  
+    asiau.value as URL,
+    asi.fields_issue as issue,
+    asi.fields_issue_description as issue_description,
+    asi.fields_priority as priority,
+    asi.fields_qualified_to_fix as qualified_to_fix,
+    asi.fields_fixed as fixed,
+    asi.fields_link_to_more_info as link_to_more_info
+FROM @client.airtable_seo_issues asi LEFT JOIN @client.airtable_seo_issues_fields_affected_urls asiau ON asi.__panoply_id = asiau.__airtable_seo_issues_panoply_id;
