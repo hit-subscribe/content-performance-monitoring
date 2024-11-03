@@ -39,6 +39,6 @@ SELECT
 FROM
   ConsecutiveZeroGroups
 WHERE
-  consecutive_zero_days > 2 -- Replace 2 with your desired threshold
+  consecutive_zero_days > 1 -- Replace 2 with your desired threshold
 GROUP BY
   url;
