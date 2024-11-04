@@ -1,49 +1,49 @@
-/*
-Run on the command line with the sitemap URL as the argument like:
-node sitemap-parser.js https://makemeaprogrammer.com/sitemap_index.xml
+const fs = require('fs');
+const csv = require('csv-parser');
+const { fetchAllURLs, createKeywordRecord } = require('./airtableModule');
 
-Ensure you have your Airtable API key and base ID in your .env file as:
-AIRTABLE_API_KEY=YOURAPIKEY
-AIRTABLE_CURRENT_BASE=BASEID
-*/
+async function loadCSVAndCheckAirtable(csvPath, airtableView = "Grid view") {
+  const csvData = [];
 
-const Sitemapper = require('sitemapper');
-const Airtable = require('airtable');
-require('dotenv').config();
+  // Step 1: Read the CSV file and store its contents in an array
+  fs.createReadStream(csvPath)
+    .pipe(csv())
+    .on('data', (row) => {
+      csvData.push(row);
+    })
+    .on('end', async () => {
+      console.log('CSV file successfully processed');
 
-const URLfieldName = 'URLs';
-const URLtableName = 'URLs';
-const LastmodFieldName = 'LastMod';
-const baseID = process.env.AIRTABLE_CURRENT_BASE;
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(baseID);
+      // Step 2: Fetch all Airtable records
+      try {
+        const airtableRecords = await fetchAllURLs(airtableView);
 
+        // Step 3: For each CSV record, check if there is a matching record in Airtable
+        for (const csvRecord of csvData) {
+          const matchingRecord = airtableRecords.find(airtableRecord => airtableRecord.URLs === csvRecord.URLs);
 
+          if (matchingRecord) {
+            console.log(`Match found for CSV URL ${csvRecord.URLs}`);
 
-async function getSitemapUrls(sitemapUrl) {
-  console.log(`Fetching sitemap URLs from: ${sitemapUrl}`);
-  try {
-    const newSitemap = new Sitemapper(
-      {
-        url: sitemapUrl,
-        fields: { lastmod: true,
-          loc: true
+            // Step 4: Split the Keywords field and create a record for each keyword
+            const keywords = csvRecord.Keywords.split(',').map(k => k.trim());
+            for (const keyword of keywords) {
+              try {
+                const createdRecord = await createKeywordRecord(keyword);
+                console.log(`Keyword record created: ${createdRecord.fields.Keyword}`);
+              } catch (error) {
+                console.error(`Error creating keyword record for ${keyword}:`, error);
+              }
+            }
+          } else {
+            console.log(`No match found for CSV URL ${csvRecord.URLs}`);
+          }
         }
+      } catch (error) {
+        console.error('Error fetching records from Airtable:', error);
       }
-    );
-    const sitemap = await newSitemap.fetch();
-    console.log(sitemap)
-    // Outputs an array of URLs with lastmod data
-    const urls = sitemap.sites.map(site => ({
-      url: site.loc,
-      lastmod: site.lastmod || null,
-    }));
-    console.log(`Fetched ${urls.length} URLs from sitemap.`);
-    return urls;
-  } catch (error) {
-    console.error('Error fetching sitemap:', error);
-    throw error;  // Re-throw error to be handled in main
-  }
+    });
 }
 
-
-getSitemapUrls('https://www.sentinelone.com/sitemap_index.xml');
+// Call the function with the path to your CSV file and Airtable view name
+loadCSVAndCheckAirtable('csv/keyword-match.csv');
