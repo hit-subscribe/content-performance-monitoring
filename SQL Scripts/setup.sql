@@ -219,3 +219,14 @@ SELECT
     asi.fields_fixed as fixed,
     asi.fields_link_to_more_info as link_to_more_info
 FROM @client.airtable_seo_issues asi LEFT JOIN @client.airtable_seo_issues_fields_affected_urls asiau ON asi.__panoply_id = asiau.__airtable_seo_issues_panoply_id;
+
+CREATE VIEW @client.backlinks AS
+SELECT 
+    al.fields_link_source_url as link_source_url,
+    al.fields_anchor_text as anchor_text,
+    alftu.value as target_url,
+    al.fields_domain_authority as domain_authority,
+    al.fields_domain_rating as domain_rating,
+    al.fields_placed as placed,
+    al.fields_link_type as link_type    
+FROM @client.airtable_links al INNER JOIN @client.airtable_links_fields_target_url alftu ON al.__panoply_id = alftu.__airtable_links_panoply_id
