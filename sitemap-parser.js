@@ -1,104 +1,126 @@
 /*
-Run on the command line with the sitemap url as the argument like:
+Run on the command line with the sitemap URL as the argument like:
 node sitemap-parser.js https://makemeaprogrammer.com/sitemap_index.xml
 
-You'll need to have an API key with the correct permissions for the table  in your .env file as:
+Ensure you have your Airtable API key and base ID in your .env file as:
 AIRTABLE_API_KEY=YOURAPIKEY
-
-And the ID of the base you want to use this in as
-
 AIRTABLE_CURRENT_BASE=BASEID
-
-get this from https://airtable.com/developers/web/api/introduction
 */
-
 
 const Sitemapper = require('sitemapper');
 const Airtable = require('airtable');
 require('dotenv').config();
+
 const URLfieldName = 'URLs';
 const URLtableName = 'URLs';
+const LastmodFieldName = 'LastMod';
 const baseID = process.env.AIRTABLE_CURRENT_BASE;
 const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(baseID);
 
-
 async function getSitemapUrls(sitemapUrl) {
+  console.log(`Fetching sitemap URLs from: ${sitemapUrl}`);
   try {
-
-    const newSitemap = new Sitemapper();
-    const sitemap = await newSitemap.fetch(sitemapUrl);
-
-    /// outputs an array of URLs
-    const urls = sitemap.sites.map(url => url.trim());
-
+    const newSitemap = new Sitemapper(
+      {
+        url: sitemapUrl,
+        fields: {
+          lastmod: true,
+          loc: true
+        }
+      }
+    );
+    const sitemap = await newSitemap.fetch();
+  console.log(sitemap)
+    // Outputs an array of URLs with lastmod data
+    const urls = sitemap.sites.map(site => ({
+      url: site.loc,
+      lastmod: site.lastmod || null,
+    }));
+    console.log(`Fetched ${urls.length} URLs from sitemap.`);
     return urls;
   } catch (error) {
     console.error('Error fetching sitemap:', error);
+    throw error;  // Re-throw error to be handled in main
   }
 }
 
-
 const getExistingUrls = async () => {
+  console.log('Fetching existing URLs from Airtable...');
   const records = [];
-
   return new Promise((resolve, reject) => {
     base(URLtableName).select({
-      fields: [URLfieldName], // Assuming your Airtable has a 'URL' field
       pageSize: 100
-    }).eachPage((pageRecords, fetchNextPage) => {
-      pageRecords.forEach((record) => {
-        console.log(record.get(URLfieldName));
-        records.push(record.get(URLfieldName));
-      });
-      fetchNextPage();
-    }, (err) => {
-      if (err) {
-        reject(err);  // Reject promise on error
-      } else {
-        resolve(records);  // Resolve promise on success
+    }).eachPage(
+      (pageRecords, fetchNextPage) => {
+        pageRecords.forEach((record) => {
+          records.push(record.get(URLtableName));
+        });
+        fetchNextPage();
+      },
+      (err) => {
+        if (err) {
+          console.error('Error fetching existing URLs from Airtable:', err);
+          reject(err);
+        } else {
+          console.log(`Fetched ${records.length} existing URLs from Airtable.`);
+          resolve(records);
+        }
       }
-    });
+    );
   });
 };
 
 const addNewRecords = async (newUrls) => {
-  const BATCH_SIZE = 10; // Airtable API allows max 10 records per request
-  const recordsToAdd = newUrls.map((url) => ({
-    fields: { [URLfieldName]: url }
+  console.log(`Adding ${newUrls.length} new URLs to Airtable...`);
+  const BATCH_SIZE = 10;
+  const recordsToAdd = newUrls.map(({ url, lastmod }) => ({
+    fields: {
+      [URLfieldName]: url,
+      [LastmodFieldName]: lastmod
+    }
   }));
 
   for (let i = 0; i < recordsToAdd.length; i += BATCH_SIZE) {
-    const batch = recordsToAdd.slice(i, i + BATCH_SIZE); // Create a batch of 10
-
+    const batch = recordsToAdd.slice(i, i + BATCH_SIZE);
     try {
       await base(URLtableName).create(batch, { typecast: true });
-      console.log(`Batch ${i / BATCH_SIZE + 1}: ${batch.length} records added to Airtable.`);
+      console.log(`Batch ${i / BATCH_SIZE + 1}: Added ${batch.length} records to Airtable.`);
     } catch (error) {
       console.error(`Error adding batch ${i / BATCH_SIZE + 1}:`, error);
     }
   }
+  console.log('Finished adding new URLs to Airtable.');
 };
 
 const main = async () => {
-  const sitemapUrl = process.argv[2];
-  if (!sitemapUrl) {
-    console.error('Please provide a sitemap URL as an argument.');
+  console.log('Starting sitemap processing...');
+  try {
+    const sitemapUrl = process.argv[2];
+    if (!sitemapUrl) {
+      console.error('Please provide a sitemap URL as an argument.');
+      process.exit(1);
+    }
+
+    console.log('Step 1: Fetching URLs from sitemap...');
+    const sitemapUrls = await getSitemapUrls(sitemapUrl);
+
+    console.log('Step 2: Fetching existing URLs from Airtable...');
+    const existingUrls = await getExistingUrls();
+    console.log('Step 3: Filtering new URLs...');
+    const newUrls = sitemapUrls.filter(({ url }) => !existingUrls.includes(url));
+    console.log(`Found ${newUrls.length} new URLs to add.`);
+
+    if (newUrls.length > 0) {
+      console.log('Step 4: Adding new URLs to Airtable...');
+      await addNewRecords(newUrls);
+    } else {
+      console.log('No new URLs to add.');
+    }
+  } catch (error) {
+    console.error('An error occurred during processing:', error);
     process.exit(1);
   }
-
-  const sitemapUrls = await getSitemapUrls(sitemapUrl);
-
-  // Get existing Airtable records
-  const existingUrls = await getExistingUrls();
-
-  // Filter out URLs already in Airtable
-  const newUrls = sitemapUrls.filter(url => !existingUrls.includes(url));
-
-  if (newUrls.length > 0) {
-    await addNewRecords(newUrls);
-  } else {
-    console.log('No new URLs to add.');
-  }
+  console.log('Sitemap processing complete.');
 };
 
 main();
