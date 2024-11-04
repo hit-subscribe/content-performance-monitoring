@@ -1,8 +1,7 @@
 
 /// EDIT THESE
 
-const clientName = 'vector'
-const sqlFile = 'traffic_decrease.sql'
+const sqlFile = 'position_change.sql'
 
 const fs = require('fs');
 const CredentialsStore = require('./credential-store');
@@ -21,7 +20,7 @@ async function queryUrlsWithPercentageDecrease(client, percentageDecrease, days)
   const options = {
     query: query,
     params: {
-      'client_name': clientName
+
     },
   };
 
