@@ -29,7 +29,7 @@ async function getSitemapUrls(sitemapUrl) {
     const sitemap = await newSitemap.fetch(sitemapUrl);
 
     /// outputs an array of URLs
-    const urls = sitemap.sites;
+    const urls = sitemap.sites.map(url => url.trim());
 
     return urls;
   } catch (error) {
