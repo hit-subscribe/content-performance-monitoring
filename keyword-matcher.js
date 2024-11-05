@@ -77,4 +77,4 @@ async function loadCSVAndCheckAirtable(csvPath, airtableView = "Grid view") {
 }
 
 // Call the function with the path to your CSV file and Airtable view name
-loadCSVAndCheckAirtable('csv/keyword-match.csv');
+loadCSVAndCheckAirtable('csv/keyword-match-netbox.csv');

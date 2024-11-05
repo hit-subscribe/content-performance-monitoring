@@ -1,49 +1,90 @@
 const fs = require('fs');
 const csv = require('csv-parser');
-const { fetchAllURLs, createKeywordRecord } = require('./airtableModule');
+const Fuse = require('fuse.js');
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
-async function loadCSVAndCheckAirtable(csvPath, airtableView = "Grid view") {
-  const csvData = [];
+// Define field names as variables
+const URL_FIELD = 'URLs';
+const TITLE_FIELD = 'Title';
 
-  // Step 1: Read the CSV file and store its contents in an array
-  fs.createReadStream(csvPath)
-    .pipe(csv())
-    .on('data', (row) => {
-      csvData.push(row);
-    })
-    .on('end', async () => {
-      console.log('CSV file successfully processed');
+// Configure the CSV writer for output
+const csvWriter = createCsvWriter({
+  path: 'output.csv',
+  header: [
+    { id: URL_FIELD, title: URL_FIELD },
+    { id: 'score', title: 'score' },
+    { id: TITLE_FIELD, title: TITLE_FIELD }
+  ]
+});
 
-      // Step 2: Fetch all Airtable records
-      try {
-        const airtableRecords = await fetchAllURLs(airtableView);
-
-        // Step 3: For each CSV record, check if there is a matching record in Airtable
-        for (const csvRecord of csvData) {
-          const matchingRecord = airtableRecords.find(airtableRecord => airtableRecord.URLs === csvRecord.URLs);
-
-          if (matchingRecord) {
-            console.log(`Match found for CSV URL ${csvRecord.URLs}`);
-
-            // Step 4: Split the Keywords field and create a record for each keyword
-            const keywords = csvRecord.Keywords.split(',').map(k => k.trim());
-            for (const keyword of keywords) {
-              try {
-                const createdRecord = await createKeywordRecord(keyword);
-                console.log(`Keyword record created: ${createdRecord.fields.Keyword}`);
-              } catch (error) {
-                console.error(`Error creating keyword record for ${keyword}:`, error);
-              }
-            }
-          } else {
-            console.log(`No match found for CSV URL ${csvRecord.URLs}`);
-          }
+// Load URLs and process their last segments
+function loadURLs(filePath) {
+  return new Promise((resolve, reject) => {
+    const urls = [];
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (row) => {
+        // Log all keys for debugging
+        console.log('Row Keys:', Object.keys(row));
+        // Check for URL_FIELD with trimming
+        if (row[URL_FIELD.trim()]) {
+          const urlParts = row[URL_FIELD.trim()].split('/');
+          const lastPart = urlParts[urlParts.length - 1];
+          const keywords = lastPart.replace(/-/g, ' ').replace(/\W+/g, ' ').trim();
+          urls.push({ url: row[URL_FIELD.trim()], keywords });
+        } else {
+          console.error(`Missing URL field for row: ${JSON.stringify(row)}`);
         }
-      } catch (error) {
-        console.error('Error fetching records from Airtable:', error);
-      }
-    });
+      })
+      .on('end', () => resolve(urls))
+      .on('error', reject);
+  });
 }
 
-// Call the function with the path to your CSV file and Airtable view name
-loadCSVAndCheckAirtable('csv/keyword-match.csv');
+// Load titles from post-names.csv for Fuse.js search
+function loadTitles(filePath) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    fs.createReadStream(filePath)
+      .pipe(csv())
+      .on('data', (data) => results.push(data))
+      .on('end', () => resolve(titles))
+      .on('error', reject);
+
+  });
+
+}
+
+(async () => {
+  const urlsFile = 'csv/URLs-scratchpad.csv';
+  const titlesFile = 'csv/post-names.csv';
+
+  try {
+    // Load and process data from CSVs
+    //const urls = await loadURLs(urlsFile);
+    const titles = await loadTitles(titlesFile);
+
+    // Configure Fuse.js for fuzzy searching titles
+  //  const fuse = new Fuse(titles, { keys: [TITLE_FIELD], threshold: 0.4 });
+
+    const resultsToWrite = [];
+
+    // Perform search for each extracted URL keyword set
+  /*  urls.forEach(({ url, keywords }) => {
+      const results = fuse.search(keywords);
+      results.forEach((result) => {
+        resultsToWrite.push({
+          [URL_FIELD]: url,
+          score: result.score,
+          [TITLE_FIELD]: result.item[TITLE_FIELD]
+        });
+      });
+    });*/
+
+    // Write results to output.csv
+   // await csvWriter.writeRecords(resultsToWrite);
+    console.log('Output written to output.csv');
+  } catch (error) {
+    console.error('Error:', error);
+  }
+})();
