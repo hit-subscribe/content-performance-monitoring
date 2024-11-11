@@ -1,12 +1,27 @@
+/* input list of URLs
+node script.js input.csv output.csv
+
+*/
+
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const csv = require('csv-parser');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
+// Get input and output file paths from command-line arguments
+const inputFilePath = process.argv[2];
+const outputFilePath = process.argv[3];
+
+if (!inputFilePath || !outputFilePath) {
+  console.error('Please provide input and output CSV file paths as arguments.');
+  console.error('Usage: node script.js <input.csv> <output.csv>');
+  process.exit(1);
+}
+
 // Set up CSV writer for output file
 const csvWriter = createCsvWriter({
-  path: 'csv/get-titles.csv',
+  path: outputFilePath,
   header: [
     { id: 'url', title: 'URL' },
     { id: 'title', title: 'Title' }
@@ -15,7 +30,7 @@ const csvWriter = createCsvWriter({
 
 // Function to fetch the title from a URL
 async function getTitle(url) {
-  console.log(url)
+  console.log(url);
   try {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
@@ -25,21 +40,6 @@ async function getTitle(url) {
     console.error(`Error fetching ${url}:`, error.message);
     return 'Error fetching title';
   }
-}
-
-// Function to load data from a CSV file
-function loadData(filePath) {
-  return new Promise((resolve, reject) => {
-    const results = [];
-    fs.createReadStream(filePath)
-      .pipe(csv())
-      .on('data', (data) => results.push(data))
-      .on('end', () => {
-        // console.log('Read results:', results);
-        resolve(results);
-      })
-      .on('error', reject);
-  });
 }
 
 // Helper function to sanitize row keys
@@ -55,12 +55,11 @@ function sanitizeKeys(row) {
 // Function to process URLs from CSV file, fetch titles, and save to another CSV
 function processUrlsFromCsv() {
   const records = [];
-  fs.createReadStream('csv/URLs-scratchpad.csv')
+  fs.createReadStream(inputFilePath)
     .pipe(csv())
     .on('data', (row) => {
-      console.log(row)
       const sanitizedRow = sanitizeKeys(row);
-      const url = sanitizedRow.URLs; // Assuming the column name is "URL"
+      const url = sanitizedRow.URLs; // Assuming the column name is "URLs"
       records.push({ url });
     })
     .on('end', async () => {
@@ -72,7 +71,7 @@ function processUrlsFromCsv() {
       // Write records with titles to the output CSV
       csvWriter.writeRecords(records)
         .then(() => {
-          console.log('Titles saved to csv/get-titles.csv');
+          console.log(`Titles saved to ${outputFilePath}`);
         })
         .catch(error => {
           console.error('Error writing to CSV:', error.message);

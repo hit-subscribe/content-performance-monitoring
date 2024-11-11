@@ -38,6 +38,7 @@ function getDataForSeoResults() {
     let requests = [];
 
     rankfile.entryToCheck.forEach((entry, entryIndex) => {
+        console.log(entry)
         entry.keywords.forEach((keyword, keywordIndex) => {
 
             const postRequest = {
@@ -58,11 +59,11 @@ function getDataForSeoResults() {
             };
 
             let request = axios(postRequest).then(function (response) {
-                
+
                 var result = response['data']['tasks'];
                 var serp = new Serp(result);
                 var rank = getRankSafely(serp,entry.url);
-                
+
                 results.push({url: entry.url, keyword: keyword, rank: rank, entryIndex, keywordIndex});
                 //console.log(`Rank for ${entry.url}, ${keyword} is ${rank}`);
 
