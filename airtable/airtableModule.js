@@ -1,3 +1,6 @@
+// Utility functions for working with Airtable
+
+
 require('dotenv').config();
 const Airtable = require('airtable');
 
@@ -40,7 +43,7 @@ function fetchAllKeywords() {
     const recordsData = [];
 
     base('Keywords').select({
-    
+
     }).eachPage(
       (records, fetchNextPage) => {
         records.forEach((record) => {
