@@ -66,15 +66,46 @@ function fetchAllKeywords() {
 }
 
 // Create a new record in the "Keywords" table
-function createKeywordRecord(keyword) {
+// Function to create a keyword record with validation
+// Modify the createKeywordRecord function to handle an object with both Keyword and Difficulty
+// Modify the createKeywordRecord function to ensure Difficulty is a valid number
+async function createKeywordRecord(keywordObj) {
+  // Extract Keyword and Difficulty (if available) from the passed object
+  const keyword = keywordObj.Keyword;
+  let difficulty = keywordObj.Difficulty;
+
+  // Ensure the keyword is a string and trim any excess spaces
+  const cleanKeyword = typeof keyword === 'string' ? keyword.trim() : '';
+
+  // Validate that the keyword is not empty
+  if (!cleanKeyword) {
+    throw new Error("Keyword cannot be empty.");
+  }
+
+  // Convert Difficulty to a number if it's provided
+  if (difficulty) {
+    difficulty = parseFloat(difficulty); // Convert to a number
+    if (isNaN(difficulty)) {
+      throw new Error("Difficulty must be a valid number.");
+    }
+  }
+
   return new Promise((resolve, reject) => {
     const base = new Airtable({ apiKey }).base(baseID);
 
+    // Create a new record in the Keywords table, including Difficulty if provided
+    const fields = {
+      Keyword: cleanKeyword
+    };
+
+    // Only include Difficulty if it's a valid number
+    if (difficulty !== undefined && !isNaN(difficulty)) {
+      fields.Difficulty = difficulty;
+    }
+
     base('Keywords').create([
       {
-        fields: {
-          Keyword: keyword
-        }
+        fields: fields
       }
     ], (err, records) => {
       if (err) {
@@ -86,4 +117,24 @@ function createKeywordRecord(keyword) {
   });
 }
 
-module.exports = { fetchAllURLs, fetchAllKeywords, createKeywordRecord };
+
+
+// Link keyword record to URL record
+async function linkRecords(urlRecordId, keywordRecordId) {
+  const base = new Airtable({ apiKey }).base(baseID);
+  try {
+    await base('URLs').update(urlRecordId, {
+      'Primary Keyword': [keywordRecordId]
+    });
+    console.log(`Linked keyword record ${keywordRecordId} to URL record ${urlRecordId}`);
+  } catch (error) {
+    console.error(`Error linking keyword record ${keywordRecordId} to URL record ${urlRecordId}:`, error);
+  }
+}
+
+module.exports = {
+  fetchAllURLs,
+  fetchAllKeywords,
+  createKeywordRecord,
+  linkRecords
+};

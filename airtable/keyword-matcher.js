@@ -1,73 +1,65 @@
 const fs = require('fs');
 const csv = require('csv-parser');
-const { fetchAllURLs, fetchAllKeywords, createKeywordRecord } = require('./airtableModule');
-const Airtable = require('airtable');
+const { fetchAllURLs, createKeywordRecord, linkRecords } = require('./airtableModule');
 
-const baseID = process.env.AIRTABLE_CURRENT_BASE;
-const apiKey = process.env.AIRTABLE_API_KEY;
-const base = new Airtable({ apiKey }).base(baseID);
+// Configuration: Map the CSV column names to variable names
+const CSV_COLUMNS = {
+  url: 'Current URL',          // Column name for URLs
+  keywords: 'Keyword',         // Column name for Keywords
+  difficulty: 'KD'             // Column name for Difficulty (if exists)
+};
+
+// Get CSV file path from command-line arguments
+const csvPath = "csv/matched-keywords-unusual.csv"
+//const csvPath = process.argv[2];
+if (!csvPath) {
+  console.error("Please provide a CSV file path as a command-line argument.");
+  process.exit(1); // Exit the script if no file path is provided
+}
+
+console.log(`CSV file path: ${csvPath}`);  // Log the path for debugging
 
 async function loadCSVAndCheckAirtable(csvPath, airtableView = "Grid view") {
   const csvData = [];
 
   // Step 1: Read the CSV file and store its contents in an array
-  fs.createReadStream(csvPath)
+  fs.createReadStream("csv/matched-keywords-unusual.csv")
     .pipe(csv())
     .on('data', (row) => {
       csvData.push(row);
     })
     .on('end', async () => {
       console.log('CSV file successfully processed');
-
       try {
-        // Step 2: Fetch all Airtable records from the URLs table
+        // Step 2: Fetch all Airtable records
         const airtableRecords = await fetchAllURLs(airtableView);
 
-        // Step 3: Fetch all existing keywords from the Keywords table
-        const existingKeywords = await fetchAllKeywords("Grid view");
-        const existingKeywordSet = new Set(existingKeywords.map(record => record.Keyword.toLowerCase()));
-
-        // Step 4: For each CSV record, check if there is a matching record in Airtable
         for (const csvRecord of csvData) {
-          const matchingRecord = airtableRecords.find(airtableRecord => airtableRecord.URLs === csvRecord.URLs);
+          // Ensure you're referencing the right column names based on the CSV_COLUMNS mapping
+          const matchingRecord = airtableRecords.find(airtableRecord => airtableRecord.URLs === csvRecord[CSV_COLUMNS.url]);
 
           if (matchingRecord) {
-            console.log(`Match found for CSV URL ${csvRecord.URLs}`);
+            console.log(`Match found for CSV URL ${csvRecord[CSV_COLUMNS.url]}`);
+            const keywords = csvRecord[CSV_COLUMNS.keywords].split(',').map(k => k.trim());
 
-            // Step 5: Split the Keywords field and check each keyword
-            const keywords = csvRecord.Keywords.split(',').map(k => k.trim().toLowerCase());
             for (const keyword of keywords) {
-              let keywordRecordId;
+              try {
+                // Ensure that Difficulty exists before passing it
+                const difficulty = csvRecord[CSV_COLUMNS.difficulty] ? csvRecord[CSV_COLUMNS.difficulty] : null;
+                const keywordObj = { Keyword: keyword, Difficulty: difficulty };
 
-              if (!existingKeywordSet.has(keyword)) {
-                try {
-                  const createdRecord = await createKeywordRecord(keyword);
-                  console.log(`Keyword record created: ${createdRecord.fields.Keyword}`);
-                  existingKeywordSet.add(keyword); // Add to the set to avoid duplicate creations in this session
-                  keywordRecordId = createdRecord.id; // Store the new keyword record ID
-                } catch (error) {
-                  console.error(`Error creating keyword record for ${keyword}:`, error);
-                  continue; // Skip this keyword if there was an error
-                }
-              } else {
-                console.log(`Keyword "${keyword}" already exists, skipping creation.`);
-                const existingKeywordRecord = existingKeywords.find(record => record.Keyword.toLowerCase() === keyword);
-                keywordRecordId = existingKeywordRecord.id; // Use the existing keyword record ID
-              }
+                // Create the keyword record
+                const createdRecord = await createKeywordRecord(keywordObj);
+                console.log(`Keyword record created: ${createdRecord.fields.Keyword}`);
 
-              // Step 6: Link the URL record to the keyword record in the "Primary Keyword" field
-              if (keywordRecordId) {
-                await base('URLs').update(matchingRecord.id, {
-                  'Primary Keyword': [keywordRecordId]
-                }).then((updatedRecord) => {
-                  console.log(`Linked keyword ${keyword} to URL record ${matchingRecord.id}`);
-                }).catch((error) => {
-                  console.error(`Error linking keyword ${keyword} to URL record:`, error);
-                });
+                // Link the newly created keyword to the URL record
+                await linkRecords(matchingRecord.id, createdRecord.id);
+              } catch (error) {
+                console.error(`Error creating or linking keyword record for ${keyword}:`, error);
               }
             }
           } else {
-            console.log(`No match found for CSV URL ${csvRecord.URLs}`);
+            console.log(`No match found for CSV URL ${csvRecord[CSV_COLUMNS.url]}`);
           }
         }
       } catch (error) {
@@ -76,5 +68,5 @@ async function loadCSVAndCheckAirtable(csvPath, airtableView = "Grid view") {
     });
 }
 
-// Call the function with the path to your CSV file and Airtable view name
-loadCSVAndCheckAirtable('csv/keyword-match-netbox.csv');
+// Call the function with the Airtable view name
+loadCSVAndCheckAirtable();
