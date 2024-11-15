@@ -1,140 +1,114 @@
 // Utility functions for working with Airtable
 
-
 require('dotenv').config();
 const Airtable = require('airtable');
 
 const baseID = process.env.AIRTABLE_CURRENT_BASE;
 const apiKey = process.env.AIRTABLE_API_KEY;
 
-// Fetch all records from the "URLs" table
-function fetchAllURLs() {
+/**
+ * Fetches all records from a specified Airtable table and extracts specified fields.
+ *
+ * @param {string} tableName - The name of the Airtable table to fetch records from.
+ * @param {Array<string>} fields - An array of field names to extract from each record.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of objects containing record IDs and the specified fields.
+ */
+function fetchAllRecords(tableName, fields) {
   return new Promise((resolve, reject) => {
     const base = new Airtable({ apiKey }).base(baseID);
     const recordsData = [];
 
-    base('URLs').select({
-
-    }).eachPage(
-      (records, fetchNextPage) => {
-        records.forEach((record) => {
-          recordsData.push({
-            id: record.id,
-            URLs: record.get('URLs')
+    base(tableName)
+      .select({})
+      .eachPage(
+        (records, fetchNextPage) => {
+          records.forEach((record) => {
+            const recordData = { id: record.id };
+            fields.forEach((field) => {
+              recordData[field] = record.get(field);
+            });
+            recordsData.push(recordData);
           });
-        });
-        fetchNextPage();
-      },
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(recordsData);
+          fetchNextPage();
+        },
+        (err) => {
+          if (err) {
+            console.error(
+              `Error fetching records from table "${tableName}": ${err.message}`
+            );
+            reject(err);
+          } else {
+            resolve(recordsData);
+          }
         }
-      }
-    );
+      );
   });
 }
 
-// Fetch all records from the "Keywords" table
-function fetchAllKeywords() {
-  return new Promise((resolve, reject) => {
-    const base = new Airtable({ apiKey }).base(baseID);
-    const recordsData = [];
-
-    base('Keywords').select({
-
-    }).eachPage(
-      (records, fetchNextPage) => {
-        records.forEach((record) => {
-          recordsData.push({
-            id: record.id,
-            Keyword: record.get('Keyword')
-          });
-        });
-        fetchNextPage();
-      },
-      (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(recordsData);
-        }
-      }
-    );
-  });
-}
-
-// Create a new record in the "Keywords" table
-// Function to create a keyword record with validation
-// Modify the createKeywordRecord function to handle an object with both Keyword and Difficulty
-// Modify the createKeywordRecord function to ensure Difficulty is a valid number
-async function createKeywordRecord(keywordObj) {
-  // Extract Keyword and Difficulty (if available) from the passed object
-  const keyword = keywordObj.Keyword;
-  let difficulty = keywordObj.Difficulty;
-
-  // Ensure the keyword is a string and trim any excess spaces
-  const cleanKeyword = typeof keyword === 'string' ? keyword.trim() : '';
-
-  // Validate that the keyword is not empty
-  if (!cleanKeyword) {
-    throw new Error("Keyword cannot be empty.");
-  }
-
-  // Convert Difficulty to a number if it's provided
-  if (difficulty) {
-    difficulty = parseFloat(difficulty); // Convert to a number
-    if (isNaN(difficulty)) {
-      throw new Error("Difficulty must be a valid number.");
-    }
-  }
-
+/**
+ * Creates a record in a specified Airtable table with the provided fields.
+ *
+ * @param {string} tableName - The name of the Airtable table to create the record in.
+ * @param {Object} fields - An object containing the fields and their values for the new record.
+ * @param {Function} [validateFields] - An optional validation function to preprocess and validate fields.
+ * @returns {Promise<Object>} A promise that resolves to the created record.
+ */
+async function createRecord(tableName, fields, validateFields) {
   return new Promise((resolve, reject) => {
     const base = new Airtable({ apiKey }).base(baseID);
 
-    // Create a new record in the Keywords table, including Difficulty if provided
-    const fields = {
-      Keyword: cleanKeyword
-    };
+    try {
+      if (validateFields) {
+        validateFields(fields);
+      }
 
-    // Only include Difficulty if it's a valid number
-    if (difficulty !== undefined && !isNaN(difficulty)) {
-      fields.Difficulty = difficulty;
+      base(tableName).create([{ fields }], (err, records) => {
+        if (err) {
+          console.error(
+            `Error creating record in table "${tableName}" with fields ${JSON.stringify(
+              fields
+            )}: ${err.message}`
+          );
+          reject(err);
+        } else {
+          resolve(records[0]);
+        }
+      });
+    } catch (error) {
+      console.error(
+        `Unexpected error during record creation in table "${tableName}": ${error.message}`
+      );
+      reject(error);
     }
-
-    base('Keywords').create([
-      {
-        fields: fields
-      }
-    ], (err, records) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(records[0]);
-      }
-    });
   });
 }
 
-
-
-// Link keyword record to URL record
-async function linkRecords(urlRecordId, keywordRecordId) {
+/**
+ * Links records in Airtable by updating a specified field in a table with a list of record IDs.
+ *
+ * @param {string} tableName - The name of the Airtable table where the record to be updated resides.
+ * @param {string} recordId - The ID of the record to update.
+ * @param {string} linkField - The name of the field to update with linked record IDs.
+ * @param {Array<string>} linkedRecordIds - An array of record IDs to link to the specified field.
+ * @returns {Promise<void>} A promise that resolves when the update is successful.
+ */
+async function linkRecords(tableName, recordId, linkField, linkedRecordIds) {
   const base = new Airtable({ apiKey }).base(baseID);
+
   try {
-    await base('URLs').update(urlRecordId, {
-      'Primary Keyword': [keywordRecordId]
+    await base(tableName).update(recordId, {
+      [linkField]: linkedRecordIds,
     });
-    console.log(`Linked keyword record ${keywordRecordId} to URL record ${urlRecordId}`);
+    console.log(
+      `Successfully linked records ${linkedRecordIds} to "${linkField}" in table "${tableName}", record "${recordId}"`
+    );
   } catch (error) {
-    console.error(`Error linking keyword record ${keywordRecordId} to URL record ${urlRecordId}:`, error);
+    console.error(
+      `Error linking records to "${linkField}" in table "${tableName}", record "${recordId}" with linked IDs ${JSON.stringify(
+        linkedRecordIds
+      )}: ${error.message}`
+    );
   }
 }
 
-module.exports = {
-  fetchAllURLs,
-  fetchAllKeywords,
-  createKeywordRecord,
-  linkRecords
-};
+module.exports = { fetchAllRecords, createRecord, linkRecords };
