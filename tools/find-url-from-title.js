@@ -9,7 +9,7 @@ const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 // Define field names as variables
 const URL_FIELD = 'URL';
 const TITLE_FIELD = 'Title';
-const KEYWORDS_FIELD = 'Keywords';
+const KEYWORDS_FIELD = 'Keyword(s)';
 
 // Get file paths from command-line arguments
 const urlsFile = process.argv[2];
