@@ -28,30 +28,29 @@ ORDER BY gain DESC;
 
 CREATE VIEW @client.airtable_url_inventory AS
 SELECT 
-  REGEXP_REPLACE(au.fields_urls, '/$', '') as url, 
-  au.fields_lastmod as lastmod, 
-  STRING_AGG(aufa.value, ', ') as tags,
-  aufkt.value as primary_keyword,
-  aufsv.value as search_volume,
-  aufd.value as difficulty,
-  aufpr.value as projected_rank,
-  aufpt.value as projected_traffic
+  REGEXP_REPLACE(urls, '/$', '') as url, 
+  lastmod, 
+  ARRAY_TO_STRING(ARRAY(SELECT JSON_VALUE(element) FROM UNNEST(JSON_EXTRACT_ARRAY(attributes)) AS element), ',') as tags,
+  JSON_VALUE(keyword_text, '$[0]') as primary_keyword,
+  CAST(JSON_VALUE(search_volume, '$[0]') AS INT64) as search_volume,
+  CAST(JSON_VALUE(difficulty, '$[0]') AS INT64) as difficulty,
+  CAST(JSON_VALUE(projected_rank, '$[0]') AS INT64) as projected_rank,
+  CAST(CAST(JSON_VALUE(projected_traffic, '$[0]') AS FLOAT64) AS INT64) as projected_traffic
 FROM 
-  @client.airtable_urls au 
-LEFT JOIN @client.airtable_urls_fields_attributes aufa ON au.__panoply_id = aufa.__airtable_urls_panoply_id
-LEFT JOIN @client.airtable_urls_fields_difficulty aufd ON au.__panoply_id = aufd.__airtable_urls_panoply_id 
-LEFT JOIN @client.airtable_urls_fields_keyword_text aufkt ON au.__panoply_id = aufkt.__airtable_urls_panoply_id
-LEFT JOIN @client.airtable_urls_fields_projected_rank aufpr ON au.__panoply_id = aufpr.__airtable_urls_panoply_id
-LEFT JOIN @client.airtable_urls_fields_projected_traffic aufpt ON au.__panoply_id = aufpt.__airtable_urls_panoply_id
-LEFT JOIN @client.airtable_urls_fields_search_volume aufsv ON au.__panoply_id = aufsv.__airtable_urls_panoply_id
-GROUP BY  url, lastmod, difficulty, primary_keyword, projected_rank, projected_traffic, search_volume;
+  @client.airtable_urls;
 
 CREATE VIEW @client.url_history AS
-SELECT REGEXP_REPLACE(auhfu.value, '/$', '') as url, DATE(fields_date) as date, fields_action_text
-FROM @client.airtable_url_history auh INNER JOIN @client.airtable_url_history_fields_url auhfu ON auh.__panoply_id = auhfu.__airtable_url_history_panoply_id;
+SELECT 
+    REGEXP_REPLACE(JSON_VALUE(url, '$[0]'), '/$', '') as url, 
+    date, 
+    action
+FROM @client.airtable_url_history;
 
 CREATE VIEW @client.organic_by_month AS
-SELECT EXTRACT(YEAR FROM date) as year, EXTRACT(MONTH FROM date) as Month, SUM(screenpageviews) as views 
+SELECT 
+    EXTRACT(YEAR FROM date) as year, 
+    EXTRACT(MONTH FROM date) as Month, 
+    SUM(screenpageviews) as views 
 FROM @client.ga4
 WHERE CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
 GROUP BY year, month
@@ -77,11 +76,13 @@ ORDER BY
   week_start_date;
 
 CREATE VIEW @client.rank_history AS
-SELECT REGEXP_REPLACE(rhu.value, '/+$', '') as url, rhk.value as keyword, fields_measurement_date as date, fields_number as rank
+SELECT 
+    REGEXP_REPLACE(JSON_VALUE(url, '$[0]'), '/+$', '') as url, 
+    JSON_VALUE(keyword, '$[0]') as keyword, 
+    measurement_date as date, 
+    number as rank
 FROM 
-    @client.airtable_rank_history rh 
-    INNER JOIN @client.airtable_rank_history_fields_keyword rhk ON rh.__panoply_id = rhk.__airtable_rank_history_panoply_id
-    INNER JOIN @client.airtable_rank_history_fields_url rhu ON rh.__panoply_id = rhu.__airtable_rank_history_panoply_id;
+    @client.airtable_ranking_results;
 
 CREATE VIEW @client.latest_rankings AS
 SELECT url, keyword, date, rank
@@ -97,25 +98,21 @@ FROM (
 WHERE row_num = 1;
 
 CREATE VIEW @client.url_performance AS
-SELECT aui.url as url, lastmod, primary_keyword, date as rank_date, rank, search_volume, difficulty, projected_rank, projected_traffic
+SELECT 
+    aui.url as url, 
+    lastmod, 
+    primary_keyword, 
+    date as rank_date, 
+    rank, 
+    search_volume, 
+    difficulty, 
+    projected_rank, 
+    projected_traffic
 FROM @client.latest_rankings rh INNER JOIN @client.airtable_url_inventory aui ON rh.url = aui.url;
 
 CREATE VIEW @client.underperformers AS
 SELECT * FROM @client.url_performance
 WHERE rank > projected_rank;
-
-CREATE VIEW @client.hs_ga4 AS
-SELECT
-  date, ga.url, screenpageviews, sessionsourcemedium
-FROM
-  @client.airtable_url_inventory aui
-INNER JOIN
-  @client.ga4 ga
-ON
-  aui.url = ga.url,
-UNNEST(SPLIT(aui.tags, ',')) AS tag
-WHERE
- TRIM(tag) IN ('HS');
 
 CREATE VIEW @client.performance_summary AS
 SELECT
@@ -136,25 +133,28 @@ FROM
 CREATE VIEW @client.url_traffic_by_calendar_month AS 
 SELECT 
   url,
-  PARSE_DATE('%Y-%m', FORMAT_TIMESTAMP('%Y-%m', date)) AS date,
+  EXTRACT(YEAR FROM date) AS year,
+  EXTRACT(MONTH FROM date) AS month,
   SUM(screenpageviews) AS total_views
 FROM 
   @client.ga4
 WHERE
-  url = REGEXP_REPLACE(url, '/$', '') AND CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
+  url = REGEXP_REPLACE(url, '/$', '') 
+  AND CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
 GROUP BY 
-  date, url
+  year, month, url
 ORDER BY 
-  date;
+  year, month;
 
-CREATE VIEW @client.url_recent_30 AS SELECT 
+CREATE VIEW @client.url_recent_30 AS 
+SELECT 
   url,
   SUM(screenpageviews) AS total_views
 FROM 
   @client.ga4
 WHERE 
   CONTAINS_SUBSTR(sessionsourcemedium, 'organic') AND
-  date BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP()
+  date BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) AND CURRENT_DATE()
 GROUP BY 
   url
 ORDER BY 
@@ -192,42 +192,37 @@ ORDER BY tag;
 
 CREATE VIEW @client.seo_issues AS
 SELECT  
-    asi.fields_issue as issue,
-    asi.fields_issue_description as issue_description,
-    asi.fields_priority as priority,
-    asi.fields_qualified_to_fix as qualified_to_fix,
-    asi.fields_fixed as fixed,
-    asi.fields_link_to_more_info as link_to_more_info,
-    ARRAY_TO_STRING(ARRAY_AGG(asiau.value), ', ') as affected_urls
-FROM @client.airtable_seo_issues asi 
-LEFT JOIN @client.airtable_seo_issues_fields_affected_urls asiau 
-    ON asi.__panoply_id = asiau.__airtable_seo_issues_panoply_id
-GROUP BY 
-    asi.fields_issue, 
-    asi.fields_issue_description, 
-    asi.fields_priority, 
-    asi.fields_qualified_to_fix, 
-    asi.fields_fixed, 
-    asi.fields_link_to_more_info;
+    issue,
+    issue_description,
+    priority,
+    qualified_to_fix,
+    fixed,
+    link_to_more_info,
+    ARRAY_TO_STRING(ARRAY(SELECT JSON_VALUE(element) FROM UNNEST(JSON_EXTRACT_ARRAY(affected_urls)) AS element), ',') as affected_urls
+FROM @client.airtable_seo_issues;
 
 CREATE VIEW @client.seo_issues_by_url AS
 SELECT  
-    asiau.value as URL,
-    asi.fields_issue as issue,
-    asi.fields_issue_description as issue_description,
-    asi.fields_priority as priority,
-    asi.fields_qualified_to_fix as qualified_to_fix,
-    asi.fields_fixed as fixed,
-    asi.fields_link_to_more_info as link_to_more_info
-FROM @client.airtable_seo_issues asi LEFT JOIN @client.airtable_seo_issues_fields_affected_urls asiau ON asi.__panoply_id = asiau.__airtable_seo_issues_panoply_id;
+    JSON_VALUE(element) AS affected_url,
+    issue,
+    issue_description,
+    priority,
+    qualified_to_fix,
+    fixed,
+    link_to_more_info
+FROM 
+    @client.airtable_seo_issues,
+    UNNEST(JSON_EXTRACT_ARRAY(affected_urls)) AS element;
 
 CREATE VIEW @client.backlinks AS
 SELECT 
-    al.fields_link_source_url as link_source_url,
-    al.fields_anchor_text as anchor_text,
-    alftu.value as target_url,
-    al.fields_domain_authority as domain_authority,
-    al.fields_domain_rating as domain_rating,
-    al.fields_placed as placed,
-    al.fields_link_type as link_type    
-FROM @client.airtable_links al INNER JOIN @client.airtable_links_fields_target_url alftu ON al.__panoply_id = alftu.__airtable_links_panoply_id
+    link_source_url,
+    anchor_text,
+    JSON_VALUE(target_url, '$[0]') as target_url,
+    domain_authority,
+    domain_rating,
+    placed,
+    link_type    
+FROM @client.airtable_link_placements;
+
+
