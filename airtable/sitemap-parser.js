@@ -14,8 +14,51 @@ require('dotenv').config();
 const URLfieldName = 'URLs';
 const URLtableName = 'URLs';
 const LastmodFieldName = 'LastMod';
-const baseID = process.env.AIRTABLE_CURRENT_BASE;
-const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(baseID);
+
+
+// Hate doing this up here. Need to refactor someday.
+const { Command } = require('commander');
+const program = new Command();
+
+// Define command line args
+program
+.name('sitemap-parser')
+.description('Process a sitemap. Add URLS to Airtable.')
+.version('0.5.0')
+.option('-a, --api-key <key>', 'Airtable API Key')
+.option('-b, --base-id <id>', 'Airtable Base ID')
+.option('-s, --map-url <url>', 'Sitemap URL');
+
+// Parse them
+program.parse();
+
+
+// Command line beats env file
+baseId = "not defined";
+apiKey = "not defined";
+if (typeof program.opts().apiKey !== 'undefined') {
+  apiKey = program.opts().apiKey;
+  console.log("Using api key from command line.");
+} else {
+  apiKey = process.env.AIRTABLE_API_KEY;
+}
+
+if (typeof program.opts().baseId !== 'undefined') {
+  console.log("Using base id from command line.");
+  baseId = program.opts().baseId;
+} else {
+  baseId = process.env.AIRTABLE_CURRENT_BASE;
+}
+
+
+if (typeof program.opts().mapUrl == 'undefined') {
+  console.error('Please provide a sitemap URL as an argument.');
+  process.exit(1);
+}
+
+
+const base = new Airtable({ apiKey: apiKey }).base(baseId);
+
 
 async function getSitemapUrls(sitemapUrl) {
   console.log(`Fetching sitemap URLs from: ${sitemapUrl}`);
@@ -95,14 +138,9 @@ const addNewRecords = async (newUrls) => {
 const main = async () => {
   console.log('Starting sitemap processing...');
   try {
-    const sitemapUrl = process.argv[2];
-    if (!sitemapUrl) {
-      console.error('Please provide a sitemap URL as an argument.');
-      process.exit(1);
-    }
 
-    console.log('Step 1: Fetching URLs from sitemap...');
-    const sitemapUrls = await getSitemapUrls(sitemapUrl);
+    console.log('Step 1: Fetching URLs from sitemap at ' + program.opts().mapUrl);
+    const sitemapUrls = await getSitemapUrls(program.opts().mapUrl);
 
     console.log('Step 2: Fetching existing URLs from Airtable...');
     const existingUrls = await getExistingUrls();
