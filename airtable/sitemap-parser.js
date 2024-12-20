@@ -57,9 +57,6 @@ if (typeof program.opts().mapUrl == 'undefined') {
   process.exit(1);
 }
 
-console.log("Search and replace: " +program.opts().replace);
-
-
 const base = new Airtable({ apiKey: apiKey }).base(baseId);
 
 async function getSitemapUrls(sitemapUrl) {
@@ -140,17 +137,12 @@ const addNewRecords = async (newUrls) => {
 
 function searchReplaceURLs(urls, replace) {
 
-
   splitted = replace.trim().split(" ");
-  console.log(splitted);
 
   for (let i = 0; i < urls.length; i++) {
     newUrl = urls[i].url.replace(splitted[0], splitted[1]);
     urls[i].url = newUrl;
   }
-
-
-
 }
 
 
@@ -160,11 +152,9 @@ const main = async () => {
 
     console.log('Step 1: Fetching URLs from sitemap at ' + program.opts().mapUrl);
     const sitemapUrls = await getSitemapUrls(program.opts().mapUrl);
-
     if (typeof program.opts().replace !== 'undefined') {
       searchReplaceURLs(sitemapUrls, program.opts().replace);
     }
-
 
     console.log('Step 2: Fetching existing URLs from Airtable...');
     const existingUrls = await getExistingUrls();
