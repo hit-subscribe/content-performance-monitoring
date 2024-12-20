@@ -9,7 +9,6 @@ AIRTABLE_CURRENT_BASE=BASEID
 
 const Sitemapper = require('sitemapper');
 const Airtable = require('airtable');
-const axios = require('axios');
 require('dotenv').config();
 
 const URLfieldName = 'URLs';
@@ -29,7 +28,7 @@ program
 .option('-a, --api-key <key>', 'Airtable API Key')
 .option('-b, --base-id <id>', 'Airtable Base ID')
 .option('-s, --map-url <url>', 'Sitemap URL')
-.option('-r, --replace \"<search replace>\"', 'Search and replace');
+.option('-r, --replace \"<find replace>\"', 'Search and replace. One space between text to find and text to replace it with.');
 
 // Parse them
 program.parse();
@@ -138,6 +137,10 @@ const addNewRecords = async (newUrls) => {
 function searchReplaceURLs(urls, replace) {
 
   splitted = replace.trim().split(" ");
+
+  if (splitted.length != 2) {
+    throw new Error("\n\nGarbled search and replace arguments. Please be sure to only use one space.\n\n");
+  }
 
   for (let i = 0; i < urls.length; i++) {
     newUrl = urls[i].url.replace(splitted[0], splitted[1]);
