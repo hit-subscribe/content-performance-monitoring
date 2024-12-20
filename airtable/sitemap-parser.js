@@ -9,6 +9,7 @@ AIRTABLE_CURRENT_BASE=BASEID
 
 const Sitemapper = require('sitemapper');
 const Airtable = require('airtable');
+const axios = require('axios');
 require('dotenv').config();
 
 const URLfieldName = 'URLs';
@@ -27,11 +28,11 @@ program
 .version('0.5.0')
 .option('-a, --api-key <key>', 'Airtable API Key')
 .option('-b, --base-id <id>', 'Airtable Base ID')
-.option('-s, --map-url <url>', 'Sitemap URL');
+.option('-s, --map-url <url>', 'Sitemap URL')
+.option('-r, --replace \"<search replace>\"', 'Search and replace');
 
 // Parse them
 program.parse();
-
 
 // Command line beats env file
 baseId = "not defined";
@@ -56,9 +57,10 @@ if (typeof program.opts().mapUrl == 'undefined') {
   process.exit(1);
 }
 
+console.log("Search and replace: " +program.opts().replace);
+
 
 const base = new Airtable({ apiKey: apiKey }).base(baseId);
-
 
 async function getSitemapUrls(sitemapUrl) {
   console.log(`Fetching sitemap URLs from: ${sitemapUrl}`);
@@ -135,12 +137,34 @@ const addNewRecords = async (newUrls) => {
   console.log('Finished adding new URLs to Airtable.');
 };
 
+
+function searchReplaceURLs(urls, replace) {
+
+
+  splitted = replace.trim().split(" ");
+  console.log(splitted);
+
+  for (let i = 0; i < urls.length; i++) {
+    newUrl = urls[i].url.replace(splitted[0], splitted[1]);
+    urls[i].url = newUrl;
+  }
+
+
+
+}
+
+
 const main = async () => {
   console.log('Starting sitemap processing...');
   try {
 
     console.log('Step 1: Fetching URLs from sitemap at ' + program.opts().mapUrl);
     const sitemapUrls = await getSitemapUrls(program.opts().mapUrl);
+
+    if (typeof program.opts().replace !== 'undefined') {
+      searchReplaceURLs(sitemapUrls, program.opts().replace);
+    }
+
 
     console.log('Step 2: Fetching existing URLs from Airtable...');
     const existingUrls = await getExistingUrls();
