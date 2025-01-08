@@ -1,0 +1,21 @@
+{
+  "name": "airtable",
+  "version": "1.0.0",
+  "main": "airtableModule.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "airtable": "^0.12.2",
+    "axios": "^1.7.9",
+    "commander": "^12.1.0",
+    "configurator": "file:configurator",
+    "dotenv": "^16.4.7",
+    "minimist": "^1.2.8",
+    "sitemapper": "^3.2.18"
+  }
+}

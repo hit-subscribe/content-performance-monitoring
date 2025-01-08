@@ -1,6 +1,6 @@
 /*
 Run on the command line with the sitemap URL as the argument like:
-node sitemap-parser.js https://makemeaprogrammer.com/sitemap_index.xml
+node sitemap-parser.js -s https://makemeaprogrammer.com/sitemap_index.xml
 
 */
 
@@ -65,6 +65,10 @@ async function checkRedirectURLs(urls) {
     url = await axios.get(urls[i].url)
     .then(function (response) { 
         
+
+      if (response.status === 200) {
+
+
         parsed_response = new URL(response.request.res.responseUrl)
         parsed_origin = new URL(urls[1].url)
     
@@ -72,10 +76,15 @@ async function checkRedirectURLs(urls) {
         if (parsed_response.hostname.valueOf() != parsed_origin.hostname.valueOf()) {
             console.log(urls[1].url + " redirected to " + response.request.res.responseUrl)
         } 
+      } else {
+        console.log("Request for " + urls[1].url + " yielded a " + response.status);
       }
+    } 
 
-    ).catch((error) => console.log(error));
-    if (i % 30 === 0) {
+    ).catch((error) => console.log(urls[1].url +" failed with " + error.response.status));
+
+    // Sleep every 50 requests
+    if (i % 50 === 0) {
       console.log("i === " + i + " Sleeping.");
       let ms = 1000;
       Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
