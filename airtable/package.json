@@ -14,7 +14,9 @@
     "axios": "^1.7.9",
     "commander": "^12.1.0",
     "configurator": "file:configurator",
+    "credential-store": "file:credential-store",
     "dotenv": "^16.4.7",
+    "format": "file:format",
     "minimist": "^1.2.8",
     "sitemapper": "^3.2.18"
   }

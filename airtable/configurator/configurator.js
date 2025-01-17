@@ -2,11 +2,17 @@
 import { Command } from 'commander';
 const program = new Command();
 
+import 'dotenv/config';
+
+import format from 'format';
+
+String.prototype.format = format;
+
 // Each property has:
 // name: the variable name. Used in env file, long command line, and code.
 // argument: soingle letter command line argument
 // help: help string for command line
-
+// envName: value name in .env file
 
 export default class Configurator {
   constructor(name, description, version, properties) {
@@ -37,7 +43,7 @@ export default class Configurator {
       if (typeof program.opts()[prop.name] !== 'undefined') {
         this.configuration[prop.name] = program.opts()[prop.name];
       } else {
-        this.configuration[prop.name] = process.env[prop.name];
+        this.configuration[prop.name] = process.env[prop.envName];
       }
 
     });
