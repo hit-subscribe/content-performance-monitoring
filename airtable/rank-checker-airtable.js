@@ -1,8 +1,10 @@
 import Serp from './serp.js';
 import Airtable from 'airtable';
+import CredentialsStore from 'credential-store';
+import axios from 'axios';
+import fs from 'fs';
 
 import Configurator from 'configurator';
-
 
 let properties = [];
 properties.push({name: 'apikey', argument: 'a', help: 'Airtable API Key', envName:'AIRTABLE_API_KEY' })
@@ -11,10 +13,23 @@ properties.push({name: 'baseid', argument: 'b', help: 'Airtable Base ID', envNam
 var configurator = new Configurator("rank-checker-airtable", "Pull URLS from Airtable. Get rank. Add to new table.",
    "0.2.0", properties);
 
+var keyFileContents = fs.readFileSync('./keys.crd','utf8');
+var credentialStore = new CredentialsStore(keyFileContents);
+
+var dataForSeoUsername = credentialStore.getCredential('dataForSeoUsername');
+var dataforSeoPassword = credentialStore.getCredential('dataForSeoPassword');
+   
+
 const base = new Airtable({ apiKey: configurator.configuration["apikey"] }).base(configurator.configuration["baseid"]);
 let urlTable = base("URLs");
 let KeyfieldName = "Keyword Text";
 let URLfieldName = "URLs";
+let URLTableName = "Rank Checker Results";
+
+let results = [];
+
+var date = new Date();
+let today = date.toISOString();
 
 
 const getUrls = async () => {
@@ -28,7 +43,7 @@ const getUrls = async () => {
           pageRecords.forEach((record) => {
             let keyword = record.get(KeyfieldName);
             if (typeof(keyword) !== 'undefined') {
-              const item = {URL:record.get("URLs"), Keywords:keyword, Number:"1000"};
+              const item = {URLs:record.get("URLs"), Keywords:keyword, Number:"100"};
               records.push(item);
             }
           });
@@ -57,66 +72,80 @@ function getRankSafely(serp, url) {
     }
 }
 
+function getDataForSeoResults(urlsToRank) {
+  let requests = [];
 
-const  getDataForSeoResults = async (urlList) => {
-    let results = [];
-    let serps = [];
+  urlsToRank.forEach((entry, entryIndex) => {
+      const postRequest = {
+          method: 'post',
+          url: 'https://api.dataforseo.com/v3/serp/google/organic/live/regular',
+          auth: {
+              username: dataForSeoUsername,
+              password: dataforSeoPassword
+          },
+          data: [{
+              "keyword": encodeURIComponent(entry.Keywords),
+              "language_code": "en",
+              "location_code": 2840
+          }],
+          headers: {
+              'content-type': 'application/json'
+          }
+      };
 
-    urlList.forEach(entry => {
-      var serp = Serp.getSERPForKeyword(entry.keyword);
-      serp.then(function (serp) {
-        entry.number = getRankSafely(serp, entry.URL);
-        addRankingResult(entry);
-        results.push(entry);
+      let request = axios(postRequest).then(function (response) {
+
+          var result = response['data']['tasks'];
+          var serp = new Serp(result);
+          entry.Number = getRankSafely(serp, entry.URL);
+
+      }).catch(function (error) {
+          console.log(error);
       });
-      serps.push(serp);
-    });
 
-    Promise.all(serps).then(() => { });
+      requests.push(request);
+      
+  })
 
-    console.log("Done getting ranks "+ results.length);
+  Promise.all(requests).then(async () => {
+    console.log("Finished getting ranks!");
+    await addNewRecords(urlsToRank);
 
-    return results;
+  });
 }
 
-const addRankingResult = async(entry) => {
+const addNewRecords = async (entries) => {
+  console.log(`Adding ${entries.length} new URLs to Airtable...`);
+  const BATCH_SIZE = 10;
 
-  var batch = [];
 
-  const recordsToAdd = {
+  const recordsToAdd = entries.map(({ URLs, Keywords, Number }) => ({
     fields: {
-      "URLs": entry.URL,
-      "Keywords": entry.Keywords,
-      "Number": entry.Number
-
-
-Add today for measurement
-
+      ["URLs"]: URLs,
+      ["Keywords"]: Keywords,
+      ["Number"]: Number,
+      ["Measurement Date"]: today
     }
-  }
-  batch.push(recordsToAdd);
+  }));
 
+  for (let i = 0; i < recordsToAdd.length; i += BATCH_SIZE) {
+    const batch = recordsToAdd.slice(i, i + BATCH_SIZE);
     try {
       await base("Ranking Results").create(batch, { typecast: true });
+      console.log(`Batch ${i / BATCH_SIZE + 1}: Added ${batch.length} records to Airtable.`);
     } catch (error) {
-      console.error(`Error adding batch`, error);
+      console.error(`Error adding batch ${i / BATCH_SIZE + 1}:`, error);
     }
-  
+  }
+  console.log('Finished adding new URLs to Airtable.');
 };
-
 
 const main = async () => {
     console.log('Starting URL rank processing...');
 
-
     const urlsToRank = await getUrls();
-    const results = await getDataForSeoResults(urlsToRank);
-
-    //console.log("Ready to add!");
-
-    //await addRankingResults(results);
-
-    
+    const results = await getDataForSeoResults(urlsToRank);    
   }  
+
   main();
   
