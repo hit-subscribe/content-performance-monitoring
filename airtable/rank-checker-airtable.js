@@ -3,6 +3,7 @@ import Airtable from 'airtable';
 import CredentialsStore from 'credential-store';
 import axios from 'axios';
 import fs from 'fs';
+import log from 'loglevel';
 
 import Configurator from 'configurator';
 
@@ -22,9 +23,19 @@ var dataforSeoPassword = credentialStore.getCredential('dataForSeoPassword');
 
 const base = new Airtable({ apiKey: configurator.configuration["apikey"] }).base(configurator.configuration["baseid"]);
 let urlTable = base("URLs");
-let KeyfieldName = "Keyword Text";
-let URLfieldName = "URLs";
-let URLTableName = "Rank Checker Results";
+
+//Constants
+let DefaultRank = "100";
+let URLTableName = "Ranking Results";
+
+
+// Airtable Field Names
+let URLFieldName = "URLs";
+let KeyFieldName = "Keyword Text";
+let NewKeyFieldName = "Keywords"
+let RankFieldName = "Number";
+let DateFieldName = "Measurement Date";
+
 
 let results = [];
 
@@ -33,7 +44,7 @@ let today = date.toISOString();
 
 
 const getUrls = async () => {
-    console.log('Fetching URLs from Airtable...');
+    log.info('Fetching URLs from Airtable...');
     const records = [];
     return new Promise((resolve, reject) => {
       urlTable.select({
@@ -41,9 +52,9 @@ const getUrls = async () => {
       }).eachPage(
         (pageRecords, fetchNextPage) => {
           pageRecords.forEach((record) => {
-            let keyword = record.get(KeyfieldName);
+            let keyword = record.get(KeyFieldName);
             if (typeof(keyword) !== 'undefined') {
-              const item = {URLs:record.get("URLs"), Keywords:keyword, Number:"100"};
+              const item = {URLs:record.get(URLFieldName), Keywords:keyword, Number:DefaultRank};
               records.push(item);
             }
           });
@@ -54,7 +65,7 @@ const getUrls = async () => {
             console.error('Error fetching URLs from Airtable:', err);
             reject(err);
           } else {
-            console.log(`Fetched ${records.length} existing URLs from Airtable.`);
+            log.info(`Fetched ${records.length} existing URLs from Airtable.`);
             resolve(records);
           }
         }
@@ -100,7 +111,7 @@ function getDataForSeoResults(urlsToRank) {
           entry.Number = getRankSafely(serp, entry.URL);
 
       }).catch(function (error) {
-          console.log(error);
+          log.info(error);
       });
 
       requests.push(request);
@@ -108,40 +119,40 @@ function getDataForSeoResults(urlsToRank) {
   })
 
   Promise.all(requests).then(async () => {
-    console.log("Finished getting ranks!");
+    log.info("Finished getting ranks!");
     await addNewRecords(urlsToRank);
 
   });
 }
 
 const addNewRecords = async (entries) => {
-  console.log(`Adding ${entries.length} new URLs to Airtable...`);
+  log.info(`Adding ${entries.length} new URLs to Airtable...`);
   const BATCH_SIZE = 10;
 
 
   const recordsToAdd = entries.map(({ URLs, Keywords, Number }) => ({
     fields: {
-      ["URLs"]: URLs,
-      ["Keywords"]: Keywords,
-      ["Number"]: Number,
-      ["Measurement Date"]: today
+      [URLFieldName]: URLs,
+      [NewKeyFieldName]: Keywords,
+      [RankFieldName]: Number,
+      [DateFieldName]: today
     }
   }));
 
   for (let i = 0; i < recordsToAdd.length; i += BATCH_SIZE) {
     const batch = recordsToAdd.slice(i, i + BATCH_SIZE);
     try {
-      await base("Ranking Results").create(batch, { typecast: true });
-      console.log(`Batch ${i / BATCH_SIZE + 1}: Added ${batch.length} records to Airtable.`);
+      await base(URLTableName).create(batch, { typecast: true });
+      log.info(`Batch ${i / BATCH_SIZE + 1}: Added ${batch.length} records to Airtable.`);
     } catch (error) {
-      console.error(`Error adding batch ${i / BATCH_SIZE + 1}:`, error);
+      log.error(`Error adding batch ${i / BATCH_SIZE + 1}:`, error);
     }
   }
-  console.log('Finished adding new URLs to Airtable.');
+  log.info('Finished adding new URLs to Airtable.');
 };
 
 const main = async () => {
-    console.log('Starting URL rank processing...');
+    log.info('Starting URL rank processing...');
 
     const urlsToRank = await getUrls();
     const results = await getDataForSeoResults(urlsToRank);    
