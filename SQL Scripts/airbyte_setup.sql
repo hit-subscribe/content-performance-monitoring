@@ -232,4 +232,32 @@ SELECT
     link_type    
 FROM @client.airtable_link_placements;
 
+CREATE VIEW @client.keyword_opportunities AS
+SELECT 
+  keyword,
+  volume,
+  difficulty,
+  projected_rank,
+  projected_traffic,
+  type_of_content_to_rank,
+  ARRAY_TO_STRING(ARRAY(SELECT JSON_VALUE(element) FROM UNNEST(JSON_EXTRACT_ARRAY(search_intent)) AS element), ',') as search_intent,
+  full_searcher_question,
+  segmentation,
+  ARRAY_TO_STRING(ARRAY(SELECT JSON_VALUE(element) FROM UNNEST(JSON_EXTRACT_ARRAY(attributes)) AS element), ',') as tags,
+  parent_keyword,
+  synonym_keyword,
+  status,  
+  urls,
+  ranking_results,
+FROM 
+  @client.airtable_keywords;
 
+CREATE VIEW @client.keyword_tags AS 
+SELECT DISTINCT tag
+FROM (
+  SELECT TRIM(tag) AS tag
+  FROM @client.keyword_opportunities, 
+  UNNEST(SPLIT(tags, ',')) AS tag
+)
+WHERE tag IS NOT NULL
+ORDER BY tag;

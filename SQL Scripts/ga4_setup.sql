@@ -1,6 +1,6 @@
 CREATE VIEW @client.ga4 AS
 SELECT 
-  date, 
+  SAFE.PARSE_DATE('%Y%m%d', date) AS date, 
   REGEXP_REPLACE(CONCAT('',REPLACE(landingpage, '(not set)', '')), '/$', '') as url, 
   screenpageviews, 
   sessionsourcemedium,
