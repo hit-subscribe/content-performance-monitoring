@@ -15,8 +15,11 @@
     "commander": "^12.1.0",
     "configurator": "file:configurator",
     "credential-store": "file:credential-store",
+    "csv-writer": "^1.6.0",
     "dotenv": "^16.4.7",
     "format": "file:format",
+    "logger": "^0.0.1",
+    "loglevel": "^1.9.2",
     "minimist": "^1.2.8",
     "sitemapper": "^3.2.18"
   }

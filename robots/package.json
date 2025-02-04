@@ -1,0 +1,17 @@
+{
+  "name": "robots",
+  "version": "1.0.0",
+  "description": "Checks robots.txt for problems",
+  "main": "check_robots_txt",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fast-url-parser": "^1.1.3",
+    "is-absolute-url": "^4.0.1",
+    "robots-txt-parser": "^2.0.3",
+    "simple-get": "^4.0.1"
+  }
+}
