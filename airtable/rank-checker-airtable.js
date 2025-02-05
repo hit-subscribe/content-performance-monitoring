@@ -108,7 +108,7 @@ function getDataForSeoResults(urlsToRank) {
 
           var result = response['data']['tasks'];
           var serp = new Serp(result);
-          entry.Number = getRankSafely(serp, entry.URL);
+          entry.Number = getRankSafely(serp, entry.URLs);
 
       }).catch(function (error) {
           log.info(error);
