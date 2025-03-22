@@ -1,7 +1,7 @@
 CREATE VIEW @client.ga4 AS 
 SELECT 
     date, 
-    page as url, 
+    REGEXP_REPLACE(page, '/$', '') as url
     clicks as screenpageviews, 
     'google / organic' as sessionsourcemedium,
     'google' as source,

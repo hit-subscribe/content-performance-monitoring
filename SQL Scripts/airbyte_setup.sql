@@ -37,12 +37,13 @@ CREATE VIEW @client.airtable_url_inventory AS
 SELECT 
   REGEXP_REPLACE(urls, '/$', '') as url, 
   lastmod, 
+  backlinks,
   ARRAY_TO_STRING(ARRAY(SELECT JSON_VALUE(element) FROM UNNEST(JSON_EXTRACT_ARRAY(attributes)) AS element), ',') as tags,
   JSON_VALUE(keyword_text, '$[0]') as primary_keyword,
   CAST(JSON_VALUE(search_volume, '$[0]') AS INT64) as search_volume,
   CAST(JSON_VALUE(difficulty, '$[0]') AS INT64) as difficulty,
   CAST(JSON_VALUE(projected_rank, '$[0]') AS INT64) as projected_rank,
-  CAST(CAST(JSON_VALUE(projected_traffic, '$[0]') AS FLOAT64) AS INT64) as projected_traffic
+  CAST(CAST(JSON_VALUE(projected_traffic, '$[0]') AS FLOAT64) AS  INT64) as projected_traffic
 FROM 
   @client.airtable_urls;
 
