@@ -1,0 +1,11 @@
+CREATE VIEW @client.ga4_events AS
+SELECT 
+  eventName as event_name,
+  SAFE.PARSE_DATE('%Y%m%d', date) AS date, 
+  REGEXP_REPLACE(CONCAT('https://www.hitsubscribe.com',REPLACE(pagePath, '(not set)', '')), '/$', '') as url, 
+  pageReferrer as page_referrer,
+  eventCount as event_count, 
+  sessionsourcemedium,
+  IF(CONTAINS_SUBSTR(sessionsourcemedium, ' / '), SPLIT(sessionsourcemedium, ' / ')[OFFSET(0)], IF(sessionsourcemedium = '(not set)', NULL, sessionsourcemedium)) AS source,
+  IF(CONTAINS_SUBSTR(sessionsourcemedium, ' / '), SPLIT(sessionsourcemedium, ' / ')[OFFSET(1)], null) AS medium
+FROM @client.ga_events;

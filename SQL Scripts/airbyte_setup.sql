@@ -1,9 +1,11 @@
+CREATE VIEW @client.airtable_ctas AS SELECT * FROM @client.@ctas_table;
 CREATE VIEW @client.airtable_keywords AS SELECT * FROM @client.@keywords_table;
 CREATE VIEW @client.airtable_link_placements AS SELECT * FROM @client.@link_placements_table;
 CREATE VIEW @client.airtable_ranking_results AS SELECT * FROM @client.@ranking_results_table;
 CREATE VIEW @client.airtable_seo_issues AS SELECT * FROM @client.@seo_issues_table;
 CREATE VIEW @client.airtable_url_history AS SELECT * FROM @client.@url_history_table;
 CREATE VIEW @client.airtable_urls AS SELECT * FROM @client.@urls_table;
+CREATE VIEW @client.airtable_ctas AS SELECT * FROM @client.@ctas_table;
 
 CREATE VIEW @client.traffic_loss_30 AS
 SELECT 
@@ -43,8 +45,20 @@ SELECT
   CAST(JSON_VALUE(search_volume, '$[0]') AS INT64) as search_volume,
   CAST(JSON_VALUE(difficulty, '$[0]') AS INT64) as difficulty,
   CAST(JSON_VALUE(projected_rank, '$[0]') AS INT64) as projected_rank,
-  CAST(CAST(JSON_VALUE(projected_traffic, '$[0]') AS FLOAT64) AS  INT64) as projected_traffic
-FROM 
+  CAST(CAST(JSON_VALUE(projected_traffic, '$[0]') AS FLOAT64) AS  INT64) as projected_traffic,
+  ARRAY_TO_STRING(ARRAY(
+    SELECT JSON_VALUE(element)
+    FROM UNNEST(JSON_EXTRACT_ARRAY(current_cta_names)) AS element
+    ),
+  ','
+  ) as current_ctas,
+  ARRAY_TO_STRING(ARRAY(
+    SELECT JSON_VALUE(element)
+    FROM UNNEST(JSON_EXTRACT_ARRAY(possible_cta_names)) AS element
+    ),
+  ','
+  ) as possible_ctas
+FROM
   @client.airtable_urls;
 
 CREATE VIEW @client.url_history AS
