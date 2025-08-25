@@ -4,6 +4,9 @@ SELECT
   REGEXP_REPLACE(CONCAT('',REPLACE(landingpage, '(not set)', '')), '/$', '') as url, 
   screenpageviews, 
   sessionsourcemedium,
+  newUsers,
+  totalUsers,
+  sessions,
   IF(CONTAINS_SUBSTR(sessionsourcemedium, ' / '), SPLIT(sessionsourcemedium, ' / ')[OFFSET(0)], IF(sessionsourcemedium = '(not set)', NULL, sessionsourcemedium)) AS source,
   IF(CONTAINS_SUBSTR(sessionsourcemedium, ' / '), SPLIT(sessionsourcemedium, ' / ')[OFFSET(1)], null) AS medium
 FROM @client.google_analytics;

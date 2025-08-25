@@ -1,7 +1,7 @@
 CREATE VIEW @client.ga4 AS
 SELECT 
   SAFE.PARSE_DATE('%Y%m%d', date) AS date, 
-  REGEXP_REPLACE(CONCAT('',REPLACE(landingpage, '(not set)', '')), '/$', '') as url, 
+  REGEXP_REPLACE(CONCAT('https://', hostName, REPLACE(landingpage, '(not set)', '')), '/$', '') AS url, 
   screenpageviews, 
   newUsers,
   totalUsers,

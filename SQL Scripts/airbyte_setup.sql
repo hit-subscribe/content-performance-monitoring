@@ -1,38 +1,16 @@
+CREATE TABLE @client.raw_ranking_results (
+  url STRING,
+  keyword STRING,
+  rank NUMERIC,
+  measurement_time DATE
+);
+
 CREATE VIEW @client.airtable_ctas AS SELECT * FROM @client.@ctas_table;
 CREATE VIEW @client.airtable_keywords AS SELECT * FROM @client.@keywords_table;
 CREATE VIEW @client.airtable_link_placements AS SELECT * FROM @client.@link_placements_table;
-CREATE VIEW @client.airtable_ranking_results AS SELECT * FROM @client.@ranking_results_table;
 CREATE VIEW @client.airtable_seo_issues AS SELECT * FROM @client.@seo_issues_table;
 CREATE VIEW @client.airtable_url_history AS SELECT * FROM @client.@url_history_table;
 CREATE VIEW @client.airtable_urls AS SELECT * FROM @client.@urls_table;
-
-CREATE VIEW @client.traffic_loss_30 AS
-SELECT 
-    url,
-    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 31 DAY) THEN screenpageviews ELSE 0 END) AS older,
-    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) AND CURRENT_DATE() THEN screenpageviews ELSE 0 END) AS most_recent,
-    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 31 DAY) THEN screenpageviews ELSE 0 END) - 
-    	SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) AND CURRENT_DATE() THEN screenpageviews ELSE 0 END) AS loss
-FROM 
-    @client.ga4
-  WHERE CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
-GROUP BY url
-HAVING older > most_recent
-ORDER BY loss DESC;
-
-CREATE VIEW @client.traffic_gain_30 AS
-SELECT 
-    url,
-    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 31 DAY) THEN screenpageviews ELSE 0 END) AS older,
-    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) AND CURRENT_DATE() THEN screenpageviews ELSE 0 END) AS most_recent,
-    SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) AND CURRENT_DATE() THEN screenpageviews ELSE 0 END) -
-    	SUM(CASE WHEN DATE(date) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 60 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 31 DAY) THEN screenpageviews ELSE 0 END) AS gain
-FROM 
-    @client.ga4
-  WHERE CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
-GROUP BY url
-HAVING older < most_recent
-ORDER BY gain DESC;
 
 CREATE VIEW @client.airtable_url_inventory AS
 SELECT 
@@ -67,55 +45,17 @@ SELECT
     action
 FROM @client.airtable_url_history;
 
-CREATE VIEW @client.organic_by_month AS
-SELECT 
-    EXTRACT(YEAR FROM date) as year, 
-    EXTRACT(MONTH FROM date) as Month, 
-    SUM(screenpageviews) as views 
-FROM @client.ga4
-WHERE CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
-GROUP BY year, month
-ORDER BY year, month;
-
-CREATE VIEW @client.daily_organic AS
-SELECT DATE(date) AS date, SUM(screenpageviews) AS views,
-FROM @client.ga4 
-GROUP BY date
-ORDER BY date;
-
-CREATE VIEW @client.weekly_organic AS
-SELECT 
-  date(TIMESTAMP_TRUNC(CAST(date AS TIMESTAMP), WEEK(MONDAY))) AS week_start_date,
-  SUM(screenpageviews) AS total_views
-FROM 
-  @client.ga4
-WHERE 
-  CONTAINS_SUBSTR(sessionsourcemedium, 'organic')
-GROUP BY 
-  week_start_date
-ORDER BY 
-  week_start_date;
-
-CREATE VIEW @client.rank_history AS
-SELECT 
-    REGEXP_REPLACE(JSON_VALUE(url, '$[0]'), '/+$', '') as url, 
-    JSON_VALUE(keyword, '$[0]') as keyword, 
-    measurement_date as date, 
-    number as rank
-FROM 
-    @client.airtable_ranking_results;
-
 CREATE VIEW @client.latest_rankings AS
 SELECT url, keyword, date, rank
 FROM (
     SELECT 
-        REGEXP_REPLACE(rh.url, '/$', '') as url, 
-        rh.keyword, 
-        rh.date, 
-        rh.rank,
-        ROW_NUMBER() OVER (PARTITION BY rh.url ORDER BY rh.date DESC, rh.rank) AS row_num
-    FROM @client.rank_history rh
-) ranked_history
+        REGEXP_REPLACE(rrr.url, '/$', '') as url, 
+        rrr.keyword, 
+        rrr.measurement_time as date, 
+        rrr.rank,
+        ROW_NUMBER() OVER (PARTITION BY rrr.url ORDER BY rrr.measurement_time DESC, rrr.rank) AS row_num
+    FROM @client.raw_ranking_results rrr
+) 
 WHERE row_num = 1;
 
 CREATE VIEW @client.url_performance AS
@@ -130,10 +70,6 @@ SELECT
     projected_rank, 
     projected_traffic
 FROM @client.latest_rankings rh INNER JOIN @client.airtable_url_inventory aui ON rh.url = aui.url;
-
-CREATE VIEW @client.underperformers AS
-SELECT * FROM @client.url_performance
-WHERE rank > projected_rank;
 
 CREATE VIEW @client.performance_summary AS
 SELECT
@@ -261,8 +197,7 @@ SELECT
   parent_keyword,
   synonym_keyword,
   status,  
-  urls,
-  ranking_results,
+  urls
 FROM 
   @client.airtable_keywords;
 
@@ -275,3 +210,57 @@ FROM (
 )
 WHERE tag IS NOT NULL
 ORDER BY tag;
+
+CREATE VIEW @client.important_to_own AS
+WITH latest_ranking_result AS (
+    SELECT
+      k.keyword,
+      r.rank AS number,
+      r.measurement_time AS measurement_date,
+      ROW_NUMBER() OVER (PARTITION BY k.keyword ORDER BY r.measurement_time DESC) AS rn
+    FROM @client.airtable_keywords k
+    LEFT JOIN @client.raw_ranking_results r
+      ON LOWER(k.keyword) = LOWER(r.keyword)
+  ),
+  -- Most recent URL history per keyword
+  latest_url_history AS (
+    SELECT
+      k.keyword,
+      auh.action,
+      auh.date,
+      ROW_NUMBER() OVER (PARTITION BY k.keyword ORDER BY auh.date DESC) AS rn
+    FROM @client.airtable_keywords k
+    LEFT JOIN UNNEST(JSON_EXTRACT_ARRAY(k.urls)) AS url_key
+    LEFT JOIN @client.airtable_urls u ON u._airtable_id = JSON_VALUE(url_key)
+    LEFT JOIN UNNEST(JSON_EXTRACT_ARRAY(u.url_history)) AS uh_key
+    LEFT JOIN @client.airtable_url_history auh ON auh._airtable_id = JSON_VALUE(uh_key)
+  ),
+  -- First available URL per keyword
+  first_url_per_keyword AS (
+    SELECT
+      k.keyword,
+      u.urls AS url,
+      ROW_NUMBER() OVER (PARTITION BY k.keyword ORDER BY u.urls) AS rn
+    FROM @client.airtable_keywords k
+    LEFT JOIN UNNEST(JSON_EXTRACT_ARRAY(k.urls)) AS url_key
+    LEFT JOIN @client.airtable_urls u ON u._airtable_id = JSON_VALUE(url_key)
+  )
+  SELECT
+    k.keyword,
+    COALESCE(k.status, 'Not Targeted') AS status,
+    COALESCE(k.type_of_content_to_rank, '') AS content_type,
+    k.projected_rank,
+    fu.url AS url,
+    r.number AS rank,
+    r.measurement_date,
+    h.action,
+    h.date
+  FROM @client.airtable_keywords k
+  LEFT JOIN latest_ranking_result r ON r.keyword = k.keyword AND r.rn = 1
+  LEFT JOIN latest_url_history h ON h.keyword = k.keyword AND h.rn = 1
+  LEFT JOIN first_url_per_keyword fu ON fu.keyword = k.keyword AND fu.rn = 1
+  WHERE 'Important to Own' IN UNNEST(ARRAY(
+    SELECT JSON_VALUE(x)
+    FROM UNNEST(JSON_EXTRACT_ARRAY(k.attributes)) AS x
+  ))
+  ORDER BY k.keyword
