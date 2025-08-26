@@ -3,6 +3,9 @@ SELECT
     date, 
     page as url, 
     clicks as screenpageviews, 
+    clicks as newUsers,
+    clicks as totalUsers,
+    clicks as sessions,
     'google / organic' as sessionsourcemedium,
     'google' as source,
     'organic' as medium
