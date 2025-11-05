@@ -1,6 +1,6 @@
+CREATE VIEW @client.airtable_ctas AS SELECT * FROM @client.@ctas_table;
 CREATE VIEW @client.airtable_keywords AS SELECT * FROM @client.@keywords_table;
 CREATE VIEW @client.airtable_link_placements AS SELECT * FROM @client.@link_placements_table;
-CREATE VIEW @client.airtable_ranking_results AS SELECT * FROM @client.@ranking_results_table;
 CREATE VIEW @client.airtable_seo_issues AS SELECT * FROM @client.@seo_issues_table;
 CREATE VIEW @client.airtable_url_history AS SELECT * FROM @client.@url_history_table;
 CREATE VIEW @client.airtable_urls AS SELECT * FROM @client.@urls_table;
